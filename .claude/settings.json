@@ -6,14 +6,7 @@
       "Bash(make -C apps/api test)",
       "Bash(make -C apps/api lint)",
       "Bash(make -C apps/api lint test)",
-      "Bash(go test:*)",
-      "Bash(go vet:*)",
-      "Bash(go build:*)",
       "Bash(go mod tidy)",
-      "Bash(golangci-lint run:*)",
-      "Bash(govulncheck:*)",
-      "Bash(gitleaks detect:*)",
-      "Bash(sqlc generate:*)",
       "Bash(pnpm typecheck:*)",
       "Bash(pnpm lint:*)",
       "Bash(pnpm test:*)",
@@ -22,11 +15,24 @@
       "Bash(pnpm -F * lint:*)",
       "Bash(pnpm -F * test:*)",
       "Bash(pnpm -F * build:*)",
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)",
       "Bash(docker compose ps:*)",
-      "Bash(docker compose logs:*)"
+      "Bash(docker compose logs:*)",
+      "Bash(go test ./...)",
+      "Bash(go test -race ./...)",
+      "Bash(go vet ./...)",
+      "Bash(go build ./...)",
+      "Bash(golangci-lint run)",
+      "Bash(golangci-lint run ./...)",
+      "Bash(govulncheck ./...)",
+      "Bash(sqlc generate)",
+      "Bash(gitleaks detect --no-git --source .)",
+      "Bash(git status)",
+      "Bash(git status --short)",
+      "Bash(git diff)",
+      "Bash(git diff HEAD)",
+      "Bash(git diff --cached)",
+      "Bash(git diff --stat)",
+      "Bash(git log --oneline -20)"
     ],
     "deny": [
       "Read(./**/.env)",
@@ -53,13 +59,23 @@
     "PreToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
-        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.sh\"" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.sh\""
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
-        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/format.sh\"" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/format.sh\""
+          }
+        ]
       }
     ]
   }
