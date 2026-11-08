@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: 'Onest';
+        src: url('../../node_modules/@fontsource-variable/onest/files/onest-cyrillic-wght-normal.woff2') format('woff2');
+        font-weight: 100 900;
+        unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+      }
+      @font-face {
+        font-family: 'Onest';
+        src: url('../../node_modules/@fontsource-variable/onest/files/onest-latin-wght-normal.woff2') format('woff2');
+        font-weight: 100 900;
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
+      }
+      * { margin: 0; box-sizing: border-box; }
+      html, body { width: 1200px; height: 630px; overflow: hidden; }
+      body {
+        position: relative;
+        background: #0b0e1c;
+        color: #eceef6;
+        font-family: 'Onest', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .glow {
+        position: absolute;
+        width: 760px; height: 760px; right: -200px; top: -80px;
+        border-radius: 50%;
+        background:
+          radial-gradient(closest-side, rgb(149 132 255 / .38), transparent),
+          radial-gradient(closest-side at 70% 30%, rgb(238 120 214 / .3), transparent),
+          radial-gradient(closest-side at 30% 75%, rgb(107 143 255 / .3), transparent);
+        filter: blur(50px);
+      }
+      canvas { position: absolute; right: -60px; top: -40px; width: 700px; height: 710px; }
+      .copy { position: absolute; left: 80px; top: 72px; bottom: 72px; width: 640px; display: flex; flex-direction: column; }
+      .brand { display: flex; align-items: center; gap: 14px; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; }
+      h1 { margin-top: auto; font-size: 72px; font-weight: 400; line-height: 1.04; letter-spacing: -0.035em; }
+      h1 span { display: block; text-wrap: balance; }
+      h1 span + span {
+        color: transparent;
+        background: linear-gradient(120deg, #6b8fff, #9584ff 50%, #ee78d6);
+        -webkit-background-clip: text; background-clip: text;
+      }
+      :lang(zh) h1 { letter-spacing: 0; line-height: 1.2; }
+      p { margin-top: 28px; font-size: 26px; color: #a2a8bf; line-height: 1.4; text-wrap: balance; }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <canvas width="1400" height="1420"></canvas>
+    <div class="copy">
+      <div class="brand">
+        <svg width="40" height="40" viewBox="0 0 32 32"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6b8fff"/><stop offset=".5" stop-color="#9584ff"/><stop offset="1" stop-color="#ee78d6"/></linearGradient></defs><path d="M9 3c0 7 14 7 14 13S9 22 9 29M23 3c0 7-14 7-14 13s14 6 14 13" fill="none" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/></svg>
+        <span id="brand"></span>
+      </div>
+      <h1 id="title"></h1>
+      <p id="tagline"></p>
+    </div>
+    <script>
+      // Static frame of the hero helix, seeded so the image is reproducible.
+      window.render = ({ lang, brand, title, tagline }) => {
+        document.documentElement.lang = lang;
+        document.getElementById('brand').textContent = brand;
+        document.getElementById('title').replaceChildren(...title.map((t) => Object.assign(document.createElement('span'), { textContent: t })));
+        document.getElementById('tagline').textContent = tagline;
+
+        let seed = 7;
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+        const c = document.querySelector('canvas');
+        const ctx = c.getContext('2d');
+        const W = c.width, H = c.height, R = 210, L = 1900, TURNS = 2.4, TILT = -0.5, f = 1800;
+        const stops = [[107, 143, 255], [149, 132, 255], [238, 120, 214]];
+        const col = (k) => {
+          const [a, b] = k < 0.5 ? [stops[0], stops[1]] : [stops[1], stops[2]];
+          const kk = k < 0.5 ? k * 2 : (k - 0.5) * 2;
+          return a.map((v, i) => Math.round(v + (b[i] - v) * kk)).join(',');
+        };
+        ctx.globalCompositeOperation = 'lighter';
+        for (let n = 0; n < 2600; n++) {
+          const roll = rnd();
+          const kind = roll < 0.4 ? 0 : roll < 0.8 ? 1 : 2;
+          const spray = rnd() < 0.08;
+          let t = rnd();
+          if (kind === 2) t = Math.round(t * TURNS * 7) / (TURNS * 7);
+          const a = t * TURNS * Math.PI * 2 + 0.6;
+          let x, z;
+          if (kind === 2) {
+            const u = rnd();
+            x = (Math.cos(a) + (Math.cos(a + Math.PI) - Math.cos(a)) * u) * R;
+            z = (Math.sin(a) + (Math.sin(a + Math.PI) - Math.sin(a)) * u) * R;
+          } else {
+            const aa = kind === 0 ? a : a + Math.PI;
+            x = Math.cos(aa) * R; z = Math.sin(aa) * R;
+          }
+          const r = (spray ? 0.15 + rnd() * 0.45 : Math.abs((rnd() * 2 - 1) * rnd()) * 0.12) * R;
+          const ang = rnd() * Math.PI * 2;
+          x += Math.cos(ang) * r; z += Math.sin(ang) * r;
+          const y = (t - 0.5) * L;
+          const s = f / (f + z);
+          const px = W / 2 + (x * Math.cos(TILT) - y * Math.sin(TILT)) * s;
+          const py = H / 2 + (x * Math.sin(TILT) + y * Math.cos(TILT)) * s;
+          const depth = (z / R + 1) / 2;
+          const size = (spray ? 1.2 + rnd() * 1.6 : 2 + rnd() * 3.4) * s * (1.6 - depth * 0.6);
+          const g = ctx.createRadialGradient(px, py, 0, px, py, size * 2);
+          const cc = col(Math.min(1, Math.max(0, t + Math.sin(a) * 0.08)));
+          g.addColorStop(0, `rgba(${cc},${0.95 - depth * 0.6})`);
+          g.addColorStop(0.35, `rgba(${cc},${(0.95 - depth * 0.6) * 0.85})`);
+          g.addColorStop(1, `rgba(${cc},0)`);
+          ctx.fillStyle = g;
+          ctx.fillRect(px - size * 2, py - size * 2, size * 4, size * 4);
+        }
+      };
+    </script>
+  </body>
+</html>

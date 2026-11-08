@@ -1,0 +1,422 @@
+---
+import { localePath, type Dict, type Locale } from '../../i18n';
+import { site } from '../../site';
+
+interface Props {
+  d: Dict;
+  lang: Locale;
+}
+const { d, lang } = Astro.props;
+const c = d.contact;
+const msgs = {
+  required: c.required,
+  phone: c.invalidPhone,
+  email: c.invalidEmail,
+  consent: c.consentRequired,
+  sending: c.sending,
+  submit: c.submit,
+  success: c.success,
+  error: c.error,
+  notConnected: c.notConnected,
+};
+---
+
+<section id="contact" class="section contact">
+  <div class="wrap grid">
+    <div class="intro">
+      <h2>{c.title}</h2>
+      <p class="lead">{c.lead}</p>
+      <ul class="quick">
+        <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+        <li><a href={site.telegram} rel="noopener" target="_blank">Telegram {site.telegramLabel}</a></li>
+        <li><a href={site.phoneHref}>{site.phone}</a></li>
+      </ul>
+    </div>
+
+    <form
+      class="form"
+      method="post"
+      action={site.leadsEndpoint ?? '#'}
+      novalidate
+      data-lead-form
+      data-endpoint={site.leadsEndpoint ?? ''}
+      data-dev={import.meta.env.DEV ? '1' : ''}
+      data-lang={lang}
+      data-msgs={JSON.stringify(msgs)}
+    >
+      <div class="row">
+        <label class="field">
+          <span>{c.name}</span>
+          <input id="lead-name" name="name" aria-describedby="lead-name-err" autocomplete="name" required maxlength="120" />
+          <em id="lead-name-err" class="err" aria-live="polite"></em>
+        </label>
+        <label class="field">
+          <span>{c.clinic}</span>
+          <input id="lead-clinic" name="clinic" aria-describedby="lead-clinic-err" autocomplete="organization" required maxlength="200" />
+          <em id="lead-clinic-err" class="err" aria-live="polite"></em>
+        </label>
+      </div>
+      <div class="row">
+        <label class="field">
+          <span>{c.phone}</span>
+          <input id="lead-phone" name="phone" aria-describedby="lead-phone-err" type="tel" inputmode="tel" autocomplete="tel" required maxlength="24" data-check="phone" />
+          <em id="lead-phone-err" class="err" aria-live="polite"></em>
+        </label>
+        <label class="field">
+          <span>{c.email} <small>({c.optional})</small></span>
+          <input id="lead-email" name="email" aria-describedby="lead-email-err" type="email" autocomplete="email" maxlength="200" data-check="email" />
+          <em id="lead-email-err" class="err" aria-live="polite"></em>
+        </label>
+      </div>
+      <label class="field">
+        <span>{c.doctors}</span>
+        <select id="lead-doctors" name="doctors">
+          {c.doctorsOptions.map((o) => <option>{o}</option>)}
+        </select>
+      </label>
+      <label class="field">
+        <span>{c.message} <small>({c.optional})</small></span>
+        <textarea id="lead-message" name="message" rows="3" maxlength="2000"></textarea>
+      </label>
+
+      <!-- Honeypot: hidden from people, bots fill it. -->
+      <label class="hp" aria-hidden="true">
+        Website <input id="lead-website" name="website" tabindex="-1" autocomplete="off" />
+      </label>
+
+      <label class="consent">
+        <input id="lead-consent" type="checkbox" name="consent" required aria-describedby="lead-consent-err" />
+        <span>
+          {c.consentBefore}<a href={localePath(lang, 'privacy/')} target="_blank">{c.consentLink}</a>{c.consentAfter}
+        </span>
+      </label>
+      <em id="lead-consent-err" class="err consent-err" aria-live="polite"></em>
+
+      <button class="btn btn-primary submit" type="submit">{c.submit}</button>
+      <p class="status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<script>
+  type Msgs = Record<'required' | 'phone' | 'email' | 'consent' | 'sending' | 'submit' | 'success' | 'error' | 'notConnected', string>;
+
+  const form = document.querySelector<HTMLFormElement>('[data-lead-form]');
+  if (form) {
+    const msgs = JSON.parse(form.dataset['msgs'] ?? '{}') as Msgs;
+    const status = form.querySelector<HTMLElement>('.status')!;
+    const button = form.querySelector<HTMLButtonElement>('.submit')!;
+
+    const errorOf = (el: HTMLInputElement | HTMLTextAreaElement): string => {
+      const v = el.value.trim();
+      if (el instanceof HTMLInputElement && el.type === 'checkbox') return el.checked ? '' : msgs.consent;
+      if (el.required && !v) return msgs.required;
+      if (!v) return '';
+      if (el.dataset['check'] === 'phone') {
+        const digits = v.replace(/\D/g, '').length;
+        return /^\+?[\d\s()-]+$/.test(v) && digits >= 10 && digits <= 15 ? '' : msgs.phone;
+      }
+      if (el.dataset['check'] === 'email') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '' : msgs.email;
+      return '';
+    };
+
+    const show = (el: HTMLInputElement | HTMLTextAreaElement, msg: string) => {
+      const slot = el.type === 'checkbox' ? form.querySelector('.consent-err') : el.parentElement?.querySelector('.err');
+      if (slot) slot.textContent = msg;
+      el.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    };
+
+    const fields = [...form.querySelectorAll<HTMLInputElement>('input[required], input[data-check]')];
+    fields.forEach((el) => {
+      el.addEventListener('blur', () => show(el, errorOf(el)));
+      el.addEventListener('input', () => el.getAttribute('aria-invalid') === 'true' && show(el, errorOf(el)));
+      el.addEventListener('change', () => el.type === 'checkbox' && show(el, errorOf(el)));
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let first: HTMLInputElement | undefined;
+      for (const el of fields) {
+        const msg = errorOf(el);
+        show(el, msg);
+        if (msg && !first) first = el;
+      }
+      if (first) {
+        first.focus();
+        return;
+      }
+
+      const data = new FormData(form);
+      if (data.get('website')) return; // bot
+
+      const endpoint = form.dataset['endpoint'];
+      if (!endpoint && !form.dataset['dev']) {
+        status.textContent = msgs.notConnected;
+        status.dataset['state'] = 'error';
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = msgs.sending;
+      status.textContent = '';
+      try {
+        const payload = {
+          name: String(data.get('name') ?? '').trim(),
+          clinic: String(data.get('clinic') ?? '').trim(),
+          phone: String(data.get('phone') ?? '').trim(),
+          email: String(data.get('email') ?? '').trim() || undefined,
+          doctors: String(data.get('doctors') ?? ''),
+          message: String(data.get('message') ?? '').trim() || undefined,
+          consent: true,
+          locale: form.dataset['lang'],
+          source: 'landing',
+        };
+        if (endpoint) {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw new Error(String(res.status));
+        } else {
+          await new Promise((r) => setTimeout(r, 600)); // dev only: no endpoint configured
+        }
+        form.reset();
+        status.textContent = msgs.success;
+        status.dataset['state'] = 'ok';
+        form.classList.add('sent');
+      } catch {
+        status.textContent = msgs.error;
+        status.dataset['state'] = 'error';
+      } finally {
+        button.disabled = false;
+        button.textContent = msgs.submit;
+      }
+    });
+  }
+</script>
+
+<style>
+  .contact {
+    padding-top: 0; /* FAQ above already provides the gap */
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: 3rem 5rem;
+    align-items: start;
+  }
+
+  .intro {
+    display: grid;
+    gap: 1.5rem;
+    position: sticky;
+    top: 7rem;
+  }
+
+  .quick {
+    display: grid;
+    gap: 0.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step-1);
+  }
+
+  .quick a {
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    transition: background-size 0.4s var(--ease-out);
+  }
+
+  .quick a:hover {
+    background-size: 100% 1px;
+  }
+
+  .form {
+    display: grid;
+    gap: 0.85rem;
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    box-shadow: 0 40px 80px -50px var(--shadow);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem 1.1rem;
+  }
+
+  .field {
+    display: grid;
+    align-content: start; /* don't stretch to the taller neighbour in the row */
+    gap: 0.4rem;
+  }
+
+  .field > span {
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+
+  small {
+    color: var(--ink-2);
+    font-weight: 400;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 3.125rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--field-line);
+    border-radius: var(--r-sm);
+    background: var(--field-bg);
+    font-size: 1rem; /* ≥16px avoids iOS zoom on focus */
+    transition:
+      border-color 0.2s,
+      background-color 0.2s,
+      box-shadow 0.2s;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 6rem;
+  }
+
+  input:hover,
+  select:hover,
+  textarea:hover {
+    border-color: color-mix(in oklab, var(--ink) 35%, var(--field-line));
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--iris-2);
+    background: var(--field-bg-focus);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--iris-2) 18%, transparent);
+  }
+
+  /* Browser autofill paints its own (light) background — keep it on-theme. */
+  input:-webkit-autofill {
+    -webkit-text-fill-color: var(--ink);
+    box-shadow: 0 0 0 100px var(--field-bg-focus) inset;
+    caret-color: var(--ink);
+  }
+
+  [aria-invalid='true'] {
+    border-color: var(--danger);
+  }
+
+  /* Error line is always reserved so messages appearing never move the layout. */
+  .err {
+    display: block;
+    min-height: 1.25rem;
+    color: var(--danger);
+    font-size: 0.8125rem;
+    font-style: normal;
+    line-height: 1.25rem;
+  }
+
+  .hp {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .consent {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    align-items: start;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.5;
+    cursor: pointer;
+  }
+
+  /* Custom checkbox on theme tokens (the UA one is a grey square in dark mode). */
+  .consent input {
+    appearance: none;
+    display: grid;
+    place-content: center;
+    width: 1.375rem;
+    height: 1.375rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border-radius: 0.4rem;
+    cursor: pointer;
+  }
+
+  .consent input::before {
+    content: '';
+    width: 0.75rem;
+    height: 0.75rem;
+    background: #fff;
+    clip-path: polygon(14% 44%, 0 59%, 40% 100%, 100% 22%, 86% 8%, 39% 69%);
+    transform: scale(0);
+    transition: transform 0.2s var(--ease-out);
+  }
+
+  .consent input:checked {
+    border-color: transparent;
+    background: var(--iris-fill);
+  }
+
+  .consent input:checked::before {
+    transform: scale(1);
+  }
+
+  .consent input:focus-visible {
+    outline: 2px solid var(--iris-1);
+    outline-offset: 3px;
+  }
+
+  .submit {
+    justify-self: start;
+    min-width: 14rem;
+    margin-top: 0.5rem;
+  }
+
+  .submit:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .status:empty {
+    display: none;
+  }
+
+  .status[data-state='ok'] {
+    color: var(--ok);
+  }
+
+  .status[data-state='error'] {
+    color: var(--danger);
+  }
+
+  @media (max-width: 56rem) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+    .intro {
+      position: static;
+    }
+  }
+
+  @media (max-width: 36rem) {
+    .row {
+      grid-template-columns: 1fr;
+    }
+    .submit {
+      justify-self: stretch;
+    }
+  }
+</style>

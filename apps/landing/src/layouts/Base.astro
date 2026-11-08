@@ -1,0 +1,88 @@
+---
+import '../styles/global.css';
+import cyrillic from '@fontsource-variable/onest/files/onest-cyrillic-wght-normal.woff2?url';
+import latin from '@fontsource-variable/onest/files/onest-latin-wght-normal.woff2?url';
+import { htmlLang, localePath, locales, ogLocale, t, type Locale } from '../i18n';
+
+interface Props {
+  lang: Locale;
+  title: string;
+  description: string;
+  page?: string; // '' for home, 'privacy/' etc.
+  detectLanguage?: boolean;
+  jsonLd?: object;
+}
+
+const { lang, title, description, page = '', detectLanguage = false, jsonLd } = Astro.props;
+const site = Astro.site ?? new URL('https://medcrm.ru');
+const canonical = new URL(localePath(lang, page), site).href;
+const ogImage = new URL(`/og/${lang}.png`, site).href; // rendered by `pnpm og`
+// Only preload the subset the first paint needs; zh text uses system CJK fonts.
+const preload = lang === 'ru' ? [cyrillic, latin] : lang === 'zh' ? [] : [latin];
+---
+
+<!doctype html>
+<html lang={htmlLang[lang]}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {locales.map((l) => <link rel="alternate" hreflang={htmlLang[l]} href={new URL(localePath(l, page), site).href} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(localePath('ru', page), site).href} />
+    <meta name="theme-color" content="#edeff3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0e1c" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      // Apply a saved theme before first paint (no flash). No saved choice → CSS follows the system.
+      try {
+        var th = localStorage.getItem('theme');
+        if (th === 'light' || th === 'dark') document.documentElement.dataset.theme = th;
+      } catch (e) {}
+    </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {preload.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={ogLocale[lang]} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImage} />
+
+    {
+      detectLanguage && (
+        <script is:inline>
+          // Root (ru) page only: send first-time visitors to their browser language; a saved choice wins.
+          (function () {
+            try {
+              if (/bot|crawl|spider|lighthouse|pagespeed/i.test(navigator.userAgent)) return;
+              var sup = ['ru', 'en', 'zh', 'es'];
+              var saved = localStorage.getItem('lang');
+              var pick = sup.indexOf(saved) > -1 ? saved : null;
+              if (!pick) {
+                var langs = navigator.languages || [navigator.language || ''];
+                for (var i = 0; i < langs.length && !pick; i++) {
+                  var p = String(langs[i]).slice(0, 2).toLowerCase();
+                  if (sup.indexOf(p) > -1) pick = p;
+                }
+                pick = pick || 'en';
+              }
+              if (pick !== 'ru') location.replace('/' + pick + '/' + location.hash);
+            } catch (e) {}
+          })();
+        </script>
+      )
+    }
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+  </head>
+  <body>
+    <a class="skip" href="#main">{t(lang).skip}</a>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,136 @@
+---
+import type { Dict } from '../../i18n';
+
+interface Props {
+  d: Dict;
+}
+const { d } = Astro.props;
+---
+
+<section class="section steps">
+  <div class="wrap">
+    <h2>{d.steps.title}</h2>
+    <ol>
+      {
+        d.steps.items.map((s, i) => (
+          <li>
+            <span class="n">{i + 1}</span>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .steps {
+    padding-top: 0;
+  }
+
+  h2 {
+    max-width: 18ch;
+    margin-bottom: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  ol {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Progress rail: track + iris fill that grows with scroll. */
+  ol::before,
+  ol::after {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    left: 1.25rem;
+    right: 1.25rem;
+    height: 2px;
+    background: var(--line);
+  }
+
+  ol::after {
+    background: var(--iris);
+    transform-origin: left;
+    transform: scaleX(1);
+  }
+
+  @supports (animation-timeline: view()) {
+    ol::after {
+      animation-name: fill; /* longhands: see Header.astro */
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 55%;
+    }
+    @keyframes fill {
+      from {
+        transform: scaleX(0);
+      }
+    }
+  }
+
+  li {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+  }
+
+  .n {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--line);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  p {
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 56rem) {
+    ol {
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+      padding-left: 3.75rem;
+    }
+    ol::before,
+    ol::after {
+      top: 1.25rem;
+      bottom: 1.25rem;
+      left: 1.25rem;
+      right: auto;
+      width: 2px;
+      height: auto;
+    }
+    ol::after {
+      transform-origin: top;
+    }
+    @supports (animation-timeline: view()) {
+      @keyframes fill {
+        from {
+          transform: scaleY(0);
+        }
+      }
+    }
+    .n {
+      position: absolute;
+      left: -3.75rem;
+      top: -0.4rem;
+    }
+  }
+</style>

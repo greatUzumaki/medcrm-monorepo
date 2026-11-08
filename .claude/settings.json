@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(make -C apps/api gen)",
+      "Bash(make -C apps/api test)",
+      "Bash(make -C apps/api lint)",
+      "Bash(make -C apps/api lint test)",
+      "Bash(go test:*)",
+      "Bash(go vet:*)",
+      "Bash(go build:*)",
+      "Bash(go mod tidy)",
+      "Bash(golangci-lint run:*)",
+      "Bash(govulncheck:*)",
+      "Bash(gitleaks detect:*)",
+      "Bash(sqlc generate:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm gen:contracts)",
+      "Bash(pnpm -F * typecheck:*)",
+      "Bash(pnpm -F * lint:*)",
+      "Bash(pnpm -F * test:*)",
+      "Bash(pnpm -F * build:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(docker compose ps:*)",
+      "Bash(docker compose logs:*)"
+    ],
+    "deny": [
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/*.p12)",
+      "Read(./**/secrets/**)",
+      "Read(./**/dumps/**)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(pg_dump:*)",
+      "Bash(psql *prod*)"
+    ],
+    "ask": [
+      "Bash(make -C apps/api migrate:*)",
+      "Bash(go get:*)",
+      "Bash(pnpm add:*)",
+      "Bash(git push:*)",
+      "Bash(docker compose down:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.sh\"" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/format.sh\"" }]
+      }
+    ]
+  }
+}

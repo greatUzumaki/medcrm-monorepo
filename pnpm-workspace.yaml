@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+overrides:
+  # @astrojs/check → @napi-rs/wasm-runtime@1.2.4 pulls @emnapi/runtime 2.0 beta, which crashes on Node 26.
+  '@emnapi/runtime': 1.11.3

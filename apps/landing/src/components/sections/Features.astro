@@ -1,0 +1,145 @@
+---
+import type { Dict } from '../../i18n';
+
+interface Props {
+  d: Dict;
+}
+const { d } = Astro.props;
+
+// Icon paths per feature, same order as d.features.items.
+const icons = [
+  'M4 6h16v14H4zM4 10h16M9 3v4M15 3v4M8 14h3v3H8z',
+  'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
+  'M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z',
+  'M4 5h16v11H8l-4 4zM8 9h8M8 12h5',
+  'M3 7h18v12H3zM3 11h18M7 15h3',
+  'M4 20V10M10 20V4M16 20v-7M22 20H2',
+];
+---
+
+<section id="features" class="section">
+  <div class="wrap">
+    <h2>{d.features.title}</h2>
+    <ul class="cards">
+      {
+        d.features.items.map((f, i) => (
+          <li class="card">
+            <svg class="icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+              <path d={icons[i]} />
+            </svg>
+            <h3>{f.title}</h3>
+            <p>{f.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  h2 {
+    max-width: 16ch;
+    margin-bottom: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .card {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    min-height: 17rem;
+    padding: 2rem;
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      color 0.45s var(--ease-out),
+      transform 0.45s var(--ease-out);
+  }
+
+  /* Hover fills the card with the iris gradient, as in the reference. */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--iris-fill);
+    opacity: 0;
+    transform: scale(1.15);
+    transition:
+      opacity 0.45s var(--ease-out),
+      transform 0.6s var(--ease-out);
+  }
+
+  .icon {
+    margin-bottom: auto;
+    color: var(--iris-2);
+    transition: color 0.45s, transform 0.6s var(--ease-out);
+  }
+
+  .card h3 {
+    margin-top: 3rem;
+  }
+
+  .card p {
+    color: var(--ink-2);
+    transition: color 0.45s;
+  }
+
+  @media (hover: hover) {
+    .card:hover {
+      color: #fff;
+      transform: translateY(-4px);
+    }
+    .card:hover::before {
+      opacity: 1;
+      transform: none;
+    }
+    .card:hover .icon {
+      color: #fff;
+      transform: rotate(-8deg) scale(1.1);
+    }
+    .card:hover p {
+      color: rgb(255 255 255 / 0.88);
+    }
+  }
+
+  @media (max-width: 64rem) {
+    .cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .cards {
+      grid-auto-flow: column;
+      grid-template-columns: none;
+      grid-auto-columns: 82%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
+      padding-bottom: 0.5rem;
+      scrollbar-width: none;
+    }
+    .cards::-webkit-scrollbar {
+      display: none;
+    }
+    .card {
+      scroll-snap-align: start;
+      min-height: 15rem;
+      padding: 1.5rem;
+    }
+  }
+</style>

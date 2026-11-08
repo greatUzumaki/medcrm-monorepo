@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://medcrm.ru/sitemap-index.xml

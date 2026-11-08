@@ -1,0 +1,96 @@
+---
+import ProductMock from '../ProductMock.astro';
+import type { Dict } from '../../i18n';
+
+interface Props {
+  d: Dict;
+}
+const { d } = Astro.props;
+---
+
+<section id="product" class="section product">
+  <div class="wrap">
+    <div class="head">
+      <h2>{d.product.title}</h2>
+      <p class="lead">{d.product.lead}</p>
+    </div>
+    <div class="stage">
+      <ProductMock m={d.product.mock} />
+    </div>
+    <dl class="roles">
+      {
+        d.product.roles.map((r) => (
+          <div>
+            <dt>{r.name}</dt>
+            <dd>{r.text}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .head {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.5rem 4rem;
+    align-items: end;
+    margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .stage {
+    perspective: 1600px;
+  }
+
+  /* The mock rises flat as it scrolls into view. CSS scroll-driven, no JS. */
+  @supports (animation-timeline: view()) {
+    .stage > :global(*) {
+      transform-origin: 50% 0;
+      animation-name: rise; /* longhands: see Header.astro */
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+    @keyframes rise {
+      from {
+        /* transform only: fading the mock would drop its text below contrast minimums mid-scroll */
+        transform: rotateX(22deg) scale(0.9) translateY(40px);
+      }
+    }
+  }
+
+  .roles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: clamp(4rem, 8vw, 6rem) 0 0;
+  }
+
+  .roles div {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  dt {
+    font-size: var(--step-1);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 56rem) {
+    .head,
+    .roles {
+      grid-template-columns: 1fr;
+    }
+    .roles {
+      gap: 1.5rem;
+    }
+  }
+</style>

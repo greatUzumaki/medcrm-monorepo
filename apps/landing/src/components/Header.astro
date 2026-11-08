@@ -1,0 +1,646 @@
+---
+import Logo from "./Logo.astro";
+import { localeNames, localePath, locales, t, type Locale } from "../i18n";
+
+interface Props {
+  lang: Locale;
+  page?: string;
+}
+const { lang, page = "" } = Astro.props;
+const d = t(lang);
+const home = localePath(lang);
+const links = [
+  ["product", d.nav.product],
+  ["features", d.nav.features],
+  ["ai", d.nav.ai],
+  ["security", d.nav.security],
+  ["faq", d.nav.faq],
+] as const;
+---
+
+<header class="hdr">
+  <div class="wrap bar">
+    <a href={home} class="home" aria-label="MedCRM"><Logo /></a>
+
+    <nav class="links" aria-label={d.nav.menu}>
+      {links.map(([id, label]) => <a href={`${home}#${id}`}>{label}</a>)}
+    </nav>
+
+    <div class="actions">
+      <button
+        class="lang-btn"
+        popovertarget="lang-menu"
+        aria-label={`${d.nav.language}: ${lang.toUpperCase()}`}
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="9"></circle><path
+            d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"
+          ></path>
+        </svg>
+        <span>{lang.toUpperCase()}</span>
+      </button>
+      <button
+        class="theme-btn"
+        type="button"
+        data-theme-toggle
+        aria-label={d.nav.theme}
+      >
+        <svg
+          class="sun"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4"></circle><path
+            d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+          ></path>
+        </svg>
+        <svg
+          class="moon"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"></path>
+        </svg>
+      </button>
+      <a class="btn btn-primary cta" href={`${home}#contact`}>{d.nav.cta}</a>
+      <button
+        class="menu-btn"
+        type="button"
+        data-menu-open
+        aria-haspopup="dialog"
+        aria-controls="mobile-menu"
+        aria-label={d.nav.menu}
+      >
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <div id="lang-menu" popover class="pop lang-pop">
+    <ul>
+      {
+        locales.map((l) => (
+          <li>
+            <a
+              href={localePath(l, page)}
+              hreflang={l}
+              lang={l}
+              data-lang={l}
+              aria-current={l === lang ? "true" : undefined}
+            >
+              {localeNames[l]}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <!-- Full-screen menu: modal <dialog> gives focus trap, inert background and Esc natively. -->
+  <dialog id="mobile-menu" class="sheet" aria-label={d.nav.menu}>
+    <div class="glow" aria-hidden="true"></div>
+    <div class="wrap sheet-bar">
+      <a href={home} class="home" aria-label="MedCRM" data-menu-link><Logo /></a
+      >
+      <button
+        class="close-btn"
+        type="button"
+        data-menu-close
+        aria-label={d.nav.close}
+        autofocus
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
+    </div>
+    <nav class="wrap sheet-nav" aria-label={d.nav.menu}>
+      {
+        [...links, ["contact", d.nav.contact] as const].map(
+          ([id, label], i) => (
+            <a href={`${home}#${id}`} style={`--i:${i}`} data-menu-link>
+              {label}
+            </a>
+          ),
+        )
+      }
+    </nav>
+    <div class="wrap sheet-foot" style={`--i:${links.length + 1}`}>
+      <a class="btn btn-primary" href={`${home}#contact`} data-menu-link
+        >{d.nav.cta}</a
+      >
+      <ul class="sheet-langs" aria-label={d.nav.language}>
+        {
+          locales.map((l) => (
+            <li>
+              <a
+                href={localePath(l, page)}
+                hreflang={l}
+                lang={l}
+                data-lang={l}
+                aria-current={l === lang ? "true" : undefined}
+              >
+                {l.toUpperCase()}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </dialog>
+</header>
+
+<script>
+  // Remember an explicit language choice so root auto-detection stops overriding it.
+  document.querySelectorAll<HTMLAnchorElement>("[data-lang]").forEach((a) =>
+    a.addEventListener("click", () => {
+      try {
+        localStorage.setItem("lang", a.dataset["lang"] ?? "ru");
+      } catch {}
+    }),
+  );
+  // Theme toggle: flip the resolved theme (explicit choice or system) and remember it.
+  document
+    .querySelector("[data-theme-toggle]")
+    ?.addEventListener("click", () => {
+      const root = document.documentElement;
+      const dark = root.dataset["theme"]
+        ? root.dataset["theme"] === "dark"
+        : matchMedia("(prefers-color-scheme: dark)").matches;
+      const next = dark ? "light" : "dark";
+      root.dataset["theme"] = next;
+      try {
+        localStorage.setItem("theme", next);
+      } catch {}
+    });
+  // Full-screen menu.
+  const sheet = document.getElementById(
+    "mobile-menu",
+  ) as HTMLDialogElement | null;
+  if (sheet) {
+    const opener =
+      document.querySelector<HTMLButtonElement>("[data-menu-open]");
+    opener?.addEventListener("click", () => {
+      opener.setAttribute("aria-expanded", "true");
+      sheet.showModal();
+    });
+    sheet.addEventListener("close", () =>
+      opener?.setAttribute("aria-expanded", "false"),
+    );
+    sheet
+      .querySelector("[data-menu-close]")
+      ?.addEventListener("click", () => sheet.close());
+    // Close before the anchor jump so the page scroll lock is released.
+    sheet
+      .querySelectorAll("[data-menu-link]")
+      .forEach((a) => a.addEventListener("click", () => sheet.close()));
+    // The menu is mobile-only: if the viewport grows past the breakpoint, close it.
+    matchMedia("(min-width: 64.01rem)").addEventListener(
+      "change",
+      (e) => e.matches && sheet.close(),
+    );
+  }
+</script>
+
+<style>
+  .hdr {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid transparent;
+    background: color-mix(in oklab, var(--paper) 82%, transparent);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .hdr {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      /* Longhands on purpose: lightningcss folds `animation` + timeline into an invalid shorthand. */
+      animation-name: hdr-solid;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll();
+      animation-range: 0 160px;
+    }
+    @keyframes hdr-solid {
+      to {
+        background: color-mix(in oklab, var(--paper) 82%, transparent);
+        backdrop-filter: blur(16px) saturate(1.4);
+        border-bottom-color: var(--line);
+      }
+    }
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 4rem;
+  }
+
+  .home {
+    display: flex; /* inline link reserved descender space and sat the logo above centre */
+    align-items: center;
+    text-decoration: none;
+    margin-right: auto;
+  }
+
+  .links {
+    display: flex;
+    gap: clamp(0.5rem, 1.1vw, 1.25rem);
+  }
+
+  .links a {
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+
+  .links a:hover {
+    color: var(--ink);
+    background: color-mix(in oklab, var(--surface) 70%, transparent);
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .theme-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--surface) 60%, transparent);
+    cursor: pointer;
+  }
+
+  .theme-btn svg {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.35s,
+      transform 0.5s var(--ease-out);
+  }
+
+  /* Show the icon of the theme you'd switch to. */
+  .moon {
+    opacity: 0;
+    transform: rotate(-60deg) scale(0.6);
+  }
+  :global(:root[data-theme="dark"]) .sun {
+    opacity: 0;
+    transform: rotate(60deg) scale(0.6);
+  }
+  :global(:root[data-theme="dark"]) .moon {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .sun {
+      opacity: 0;
+      transform: rotate(60deg) scale(0.6);
+    }
+    :global(:root:not([data-theme="light"])) .moon {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .lang-btn,
+  .menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 2.75rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--surface) 60%, transparent);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .cta {
+    min-height: 2.75rem;
+    font-size: 0.9375rem;
+  }
+
+  .menu-btn {
+    display: none;
+    width: 2.75rem;
+    padding: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .menu-btn span {
+    width: 16px;
+    height: 1.5px;
+    background: currentColor;
+    border-radius: 2px;
+  }
+
+  .pop {
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 24px 60px -24px var(--shadow);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    transition:
+      opacity 0.25s var(--ease-out),
+      transform 0.25s var(--ease-out),
+      overlay 0.25s allow-discrete,
+      display 0.25s allow-discrete;
+  }
+
+  .pop:popover-open {
+    opacity: 1;
+    transform: none;
+  }
+
+  @starting-style {
+    .pop:popover-open {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+    }
+  }
+
+  .lang-pop {
+    position: fixed;
+    inset: 4.75rem var(--gutter) auto auto;
+    min-width: 11rem;
+    padding: 0.375rem;
+  }
+
+  .lang-pop ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .lang-pop a {
+    display: block;
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--r-sm);
+    text-decoration: none;
+  }
+
+  .lang-pop a:hover {
+    background: var(--paper);
+  }
+
+  .lang-pop a[aria-current] {
+    font-weight: 600;
+  }
+
+  .lang-pop a[aria-current]::after {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    border-radius: 50%;
+    background: var(--iris);
+  }
+
+  /* ---------- Full-screen menu ---------- */
+  :global(html:has(#mobile-menu[open])) {
+    overflow: hidden; /* scroll lock while the menu is open */
+  }
+
+  .sheet {
+    --origin: calc(100% - var(--gutter) - 1.375rem) 2.25rem; /* centre of the menu button */
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0 0 max(1.5rem, env(safe-area-inset-bottom));
+    border: 0;
+    background: var(--paper);
+    color: var(--ink);
+    overflow: hidden auto;
+    isolation: isolate;
+    clip-path: circle(0 at var(--origin));
+    transition:
+      clip-path 0.45s cubic-bezier(0.65, 0, 0.35, 1),
+      overlay 0.45s allow-discrete,
+      display 0.45s allow-discrete;
+  }
+
+  .sheet[open] {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    clip-path: circle(150% at var(--origin));
+    transition-duration: 0.7s;
+    transition-timing-function: var(--ease-out);
+  }
+
+  @starting-style {
+    .sheet[open] {
+      clip-path: circle(0 at var(--origin));
+    }
+  }
+
+  .sheet::backdrop {
+    background: transparent;
+  }
+
+  .sheet .glow {
+    position: fixed; /* fixed: an absolute glow past the edge made the menu scrollable */
+    z-index: -1;
+    width: 42rem;
+    height: 42rem;
+    right: -18rem;
+    bottom: -16rem;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        closest-side,
+        color-mix(in oklab, var(--iris-2) 32%, transparent),
+        transparent
+      ),
+      radial-gradient(
+        closest-side at 30% 40%,
+        color-mix(in oklab, var(--iris-3) 26%, transparent),
+        transparent
+      );
+    filter: blur(30px);
+  }
+
+  .sheet-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4.5rem;
+  }
+
+  .close-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: transform 0.5s var(--ease-out);
+  }
+
+  .close-btn:hover {
+    transform: rotate(90deg);
+  }
+
+  .sheet-nav {
+    display: grid;
+    align-content: center;
+    gap: clamp(0.75rem, 2.5vh, 1.5rem);
+    padding-block: 2rem;
+  }
+
+  .sheet-nav a,
+  .sheet-foot {
+    opacity: 0;
+    transform: translateY(1.25rem);
+    transition:
+      opacity 0.2s,
+      transform 0.2s;
+  }
+
+  .sheet[open] .sheet-nav a,
+  .sheet[open] .sheet-foot {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.6s var(--ease-out),
+      transform 0.6s var(--ease-out);
+    transition-delay: calc(0.18s + var(--i) * 0.055s);
+  }
+
+  @starting-style {
+    .sheet[open] .sheet-nav a,
+    .sheet[open] .sheet-foot {
+      opacity: 0;
+      transform: translateY(1.25rem);
+    }
+  }
+
+  .sheet-nav a {
+    justify-self: start;
+    padding: 0.4rem 0;
+    font-size: clamp(2rem, 9vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    text-decoration: none;
+  }
+
+  .sheet-nav a:hover,
+  .sheet-nav a:focus-visible {
+    color: transparent;
+    background: var(--iris-text);
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+
+  .sheet-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .sheet-foot .btn {
+    flex: 1 1 14rem;
+  }
+
+  .sheet-langs {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sheet-langs a {
+    display: inline-grid;
+    place-items: center;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    color: var(--ink-2);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .sheet-langs a[aria-current] {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  @media (max-width: 64rem) {
+    .links {
+      display: none;
+    }
+    .menu-btn {
+      display: inline-flex;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .cta {
+      display: none;
+    }
+  }
+</style>

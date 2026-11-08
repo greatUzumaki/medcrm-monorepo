@@ -1,0 +1,313 @@
+---
+import type { Dict } from '../i18n';
+
+interface Props {
+  m: Dict['product']['mock'];
+}
+const { m } = Astro.props;
+const times = ['09:00', '09:30', '10:00', '10:30', '11:00'];
+const tones = ['blue', 'violet', 'pink'];
+---
+
+<div class="mock" aria-hidden="true">
+  <div class="side">
+    <span class="dot"></span>
+    {Array.from({ length: 5 }, (_, i) => <span class:list={['ico', { active: i === 1 }]} />)}
+  </div>
+  <div class="main">
+    <div class="top">
+      <strong>{m.today}</strong>
+      <span class="search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        {m.search}
+      </span>
+    </div>
+    <div class="grid" style={`--cols:${m.doctors.length}`}>
+      <span></span>
+      {m.doctors.map((doc) => <span class="doc">{doc}</span>)}
+      {
+        times.map((time, row) => (
+          <>
+            <span class="time" style={`grid-row:${row + 2}`}>
+              {time}
+            </span>
+            {m.doctors.map((_, col) => (
+              <span class="cell" style={`grid-row:${row + 2};grid-column:${col + 2}`} />
+            ))}
+          </>
+        ))
+      }
+      {
+        m.slots.map((s, i) => (
+          <span
+            class={`appt ${tones[s.col % 3]}`}
+            style={`grid-column:${s.col + 2};grid-row:${s.row + 2} / span ${s.span};--i:${i}`}
+          >
+            <b>{s.name}</b>
+            <small>{s.kind}</small>
+          </span>
+        ))
+      }
+      <span class="now" style="grid-row:3"></span>
+    </div>
+  </div>
+  <div class="ai-card">
+    <span class="spark">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"></path></svg>
+    </span>
+    <div>
+      <b>{m.aiTitle}</b>
+      <p>{m.aiText}</p>
+    </div>
+    <span class="open">{m.aiAction}</span>
+  </div>
+</div>
+
+<style>
+  .mock {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3.5rem 1fr;
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    box-shadow:
+      0 50px 100px -40px var(--shadow),
+      0 0 0 1px var(--line);
+    font-size: 0.8125rem;
+    user-select: none;
+  }
+
+  .side {
+    display: grid;
+    align-content: start;
+    justify-items: center;
+    gap: 1.1rem;
+    padding: 1.25rem 0;
+    border-right: 1px solid var(--line);
+  }
+
+  .dot {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.5rem;
+    background: var(--iris);
+    margin-bottom: 0.5rem;
+  }
+
+  .ico {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 0.35rem;
+    background: var(--line);
+  }
+
+  .ico.active {
+    background: var(--ink);
+  }
+
+  .main {
+    padding: 1.25rem 1.25rem 1.5rem;
+    min-width: 0;
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .top strong {
+    font-weight: 500;
+  }
+
+  .search {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-size: 0.8125rem;
+  }
+
+  .grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3rem repeat(var(--cols), minmax(0, 1fr));
+    grid-template-rows: 2rem repeat(5, 3.25rem);
+    column-gap: 0.5rem;
+  }
+
+  .doc {
+    color: var(--ink-2);
+    font-weight: 500;
+    align-self: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .time {
+    grid-column: 1;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+    transform: translateY(-0.55em);
+  }
+
+  .cell {
+    border-top: 1px dashed var(--line);
+  }
+
+  .appt {
+    z-index: 1;
+    display: grid;
+    align-content: start;
+    gap: 0.1rem;
+    margin: 0.25rem 0;
+    padding: 0.45rem 0.6rem;
+    border-radius: 0.65rem;
+    border-left: 3px solid var(--c);
+    background: color-mix(in oklab, var(--c) 12%, var(--surface));
+    overflow: hidden;
+    animation: pop 0.6s var(--ease-out) both;
+    animation-delay: calc(var(--i) * 80ms);
+    animation-play-state: var(--play, running);
+  }
+
+  .appt b {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .appt small {
+    color: var(--ink-2);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .blue {
+    --c: var(--iris-1);
+  }
+  .violet {
+    --c: var(--iris-2);
+  }
+  .pink {
+    --c: var(--iris-3);
+  }
+
+  .now {
+    z-index: 2;
+    grid-column: 2 / -1;
+    align-self: center;
+    height: 2px;
+    background: var(--iris);
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .now::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--iris-1);
+  }
+
+  .ai-card {
+    position: absolute;
+    right: -1.5rem;
+    bottom: -2rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.875rem;
+    width: min(26rem, 80%);
+    padding: 1rem 1.1rem;
+    border-radius: var(--r-md);
+    border: 1.5px solid transparent;
+    background:
+      linear-gradient(var(--surface), var(--surface)) padding-box,
+      var(--iris) border-box;
+    box-shadow: 0 30px 60px -25px var(--shadow);
+  }
+
+  .ai-card b {
+    display: block;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  .ai-card p {
+    color: var(--ink-2);
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  .spark {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.75rem;
+    background: var(--iris-fill);
+    color: #fff;
+  }
+
+  .open {
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: 0.75rem;
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .mock {
+      grid-template-columns: 1fr;
+    }
+    .side {
+      display: none;
+    }
+    .main {
+      padding: 1rem;
+    }
+    .grid {
+      grid-template-columns: 2.5rem repeat(var(--cols), minmax(0, 1fr));
+      grid-template-rows: 1.75rem repeat(5, 3rem);
+      column-gap: 0.35rem;
+    }
+    .appt small,
+    .search {
+      display: none;
+    }
+    .ai-card {
+      position: relative;
+      right: auto;
+      bottom: auto;
+      width: auto;
+      margin: 0 0.75rem 0.75rem;
+      grid-template-columns: auto 1fr;
+    }
+    .open {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,23 @@
+{
+  "name": "@medcrm/landing",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "og": "node scripts/og.mjs",
+    "test:browsers": "node scripts/browsers.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/onest": "^5.3.1",
+    "astro": "^7.4.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "playwright": "^1.65.0",
+    "typescript": "^6.0.3"
+  }
+}

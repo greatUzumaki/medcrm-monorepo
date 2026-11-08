@@ -1,0 +1,169 @@
+---
+import Helix from '../Helix.astro';
+import type { Dict } from '../../i18n';
+
+interface Props {
+  d: Dict;
+}
+const { d } = Astro.props;
+---
+
+<section class="hero">
+  <div class="art"><Helix /></div>
+  <div class="wrap copy">
+    <h1>
+      {d.hero.title.map((line) => <span class="line">{line}</span>)}
+    </h1>
+    <p class="lead">{d.hero.lead}</p>
+    <div class="ctas">
+      <a class="btn btn-primary" href="#contact">{d.hero.cta}</a>
+      <a class="btn btn-ghost" href="#ai">{d.hero.secondary}</a>
+    </div>
+    <ul class="facts">
+      {
+        d.hero.facts.map((f) => (
+          <li>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg>
+            {f}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: min(56rem, calc(100svh - 4.5rem));
+    padding-block: 3rem 5rem;
+    isolation: isolate;
+    overflow-x: clip; /* the helix bleeds past the right edge on purpose */
+  }
+
+  .art {
+    position: absolute;
+    z-index: -1;
+    inset: 0 -6vw 0 42%;
+  }
+
+  .copy {
+    display: grid;
+    gap: 1.75rem;
+    justify-items: start;
+  }
+
+  h1 {
+    font-size: var(--step-4);
+    max-width: 13ch;
+  }
+
+  :lang(zh) h1 {
+    max-width: 11em;
+  }
+
+  .line {
+    display: block;
+    animation: blur-in 1.1s var(--ease-out) both;
+  }
+
+  .line + .line {
+    animation-delay: 0.12s;
+    color: transparent;
+    background: var(--iris-text);
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+
+  /* LCP stays painted from the first frame: only blur/offset animate, never opacity. */
+  @keyframes blur-in {
+    from {
+      filter: blur(10px);
+      transform: translateY(0.25em);
+    }
+  }
+
+  .lead,
+  .ctas,
+  .facts {
+    animation: fade 0.9s var(--ease-out) both;
+  }
+  .lead {
+    animation-delay: 0.25s;
+  }
+  .ctas {
+    animation-delay: 0.35s;
+  }
+  .facts {
+    animation-delay: 0.45s;
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  .lead {
+    max-width: 34rem;
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+
+  .facts li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .facts svg {
+    color: var(--iris-2);
+    flex: none;
+  }
+
+  @media (max-width: 56rem) {
+    .hero {
+      align-items: end;
+      min-height: auto;
+      padding-top: min(62vw, 22rem);
+    }
+    .art {
+      inset: 0 -10vw auto -10vw;
+      height: min(95vw, 34rem);
+    }
+    .art::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 40%;
+      background: linear-gradient(transparent, var(--paper));
+    }
+    .ctas {
+      justify-self: stretch;
+    }
+    .ctas .btn {
+      flex: 1 1 12rem;
+    }
+  }
+</style>

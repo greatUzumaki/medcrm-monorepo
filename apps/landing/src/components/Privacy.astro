@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import { localePath, t, type Locale } from '../i18n';
+import { site } from '../site';
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const d = t(lang);
+// TODO(legal): replace with the approved personal data processing policy text (152-FZ art. 18.1).
+---
+
+<Base lang={lang} title={`${d.privacy.title} — ${site.brand}`} description={d.privacy.title} page="privacy/">
+  <Header lang={lang} page="privacy/" />
+  <main id="main" class="wrap doc">
+    <h1>{d.privacy.title}</h1>
+    <p>{d.privacy.draft} <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
+    <a class="btn btn-ghost" href={localePath(lang)}>{d.privacy.back}</a>
+  </main>
+  <Footer lang={lang} />
+</Base>
+
+<style>
+  .doc {
+    display: grid;
+    gap: 1.5rem;
+    justify-items: start;
+    max-width: 44rem;
+    padding-block: clamp(4rem, 10vw, 8rem);
+  }
+  h1 {
+    font-size: var(--step-3);
+  }
+  p {
+    color: var(--ink-2);
+  }
+</style>

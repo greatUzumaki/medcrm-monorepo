@@ -1,0 +1,61 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import Hero from './sections/Hero.astro';
+import Product from './sections/Product.astro';
+import Features from './sections/Features.astro';
+import Ai from './sections/Ai.astro';
+import Steps from './sections/Steps.astro';
+import Security from './sections/Security.astro';
+import Faq from './sections/Faq.astro';
+import Contact from './sections/Contact.astro';
+import { localePath, t, type Locale } from '../i18n';
+import { site } from '../site';
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const d = t(lang);
+const url = new URL(localePath(lang), Astro.site).href;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'Organization', name: site.brand, url, email: site.email, telephone: site.phone },
+    {
+      '@type': 'SoftwareApplication',
+      name: site.brand,
+      applicationCategory: 'BusinessApplication',
+      applicationSubCategory: 'Medical CRM',
+      operatingSystem: 'Web',
+      description: d.meta.description,
+      inLanguage: lang,
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: d.faq.items.map((i) => ({
+        '@type': 'Question',
+        name: i.q,
+        acceptedAnswer: { '@type': 'Answer', text: i.a },
+      })),
+    },
+  ],
+};
+---
+
+<Base lang={lang} title={d.meta.title} description={d.meta.description} detectLanguage={lang === 'ru'} jsonLd={jsonLd}>
+  <Header lang={lang} />
+  <main id="main">
+    <Hero d={d} />
+    <Product d={d} />
+    <Features d={d} />
+    <Ai d={d} />
+    <Steps d={d} />
+    <Security d={d} />
+    <Faq d={d} />
+    <Contact d={d} lang={lang} />
+  </main>
+  <Footer lang={lang} />
+</Base>
