@@ -1,0 +1,44 @@
+[Unit]
+Description=OpenMedAI landing leads API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/leads
+# Secrets (SMTP password, bot token): root-owned 0600 file, filled by `leads-setup`.
+EnvironmentFile=-/etc/leads.env
+Environment=LEADS_ADDR=127.0.0.1:4001
+# Leads (personal data) live in /var/lib/leads, readable only by this service.
+StateDirectory=leads
+StateDirectoryMode=0700
+DynamicUser=yes
+UMask=0077
+Restart=on-failure
+RestartSec=2
+
+# Sandbox: the service only needs outbound HTTPS/SMTPS and its state dir.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+CapabilityBoundingSet=
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target

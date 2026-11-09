@@ -8,7 +8,7 @@ ENV_FILE="$(dirname "$0")/../../../deploy/.env"
 : "${DEPLOY_HOST:?set DEPLOY_HOST in deploy/.env}"
 KEY="${DEPLOY_KEY:-$HOME/.ssh/openmedai}"
 
-SITE_URL=https://openmedai.ru npx -y pnpm@12.18.0 build
+SITE_URL=https://openmedai.ru PUBLIC_LEADS_ENDPOINT=/api/leads npx -y pnpm@12.18.0 build
 # --delete removes files of old builds; hashed assets are immutable so stale ones are safe to drop.
 rsync -az --delete -e "ssh -i $KEY" dist/ "deploy@$DEPLOY_HOST:/srv/landing/"
 echo "Deployed to https://openmedai.ru"
