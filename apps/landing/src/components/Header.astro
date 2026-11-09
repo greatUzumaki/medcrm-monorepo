@@ -1,6 +1,7 @@
 ---
 import Logo from "./Logo.astro";
 import { localeNames, localePath, locales, t, type Locale } from "../i18n";
+import { site } from "../site";
 
 interface Props {
   lang: Locale;
@@ -20,7 +21,7 @@ const links = [
 
 <header class="hdr">
   <div class="wrap bar">
-    <a href={home} class="home" aria-label="MedCRM"><Logo /></a>
+    <a href={home} class="home" aria-label={site.brand}><Logo /></a>
 
     <nav class="links" aria-label={d.nav.menu}>
       {links.map(([id, label]) => <a href={`${home}#${id}`}>{label}</a>)}
@@ -120,7 +121,7 @@ const links = [
   <dialog id="mobile-menu" class="sheet" aria-label={d.nav.menu}>
     <div class="glow" aria-hidden="true"></div>
     <div class="wrap sheet-bar">
-      <a href={home} class="home" aria-label="MedCRM" data-menu-link><Logo /></a
+      <a href={home} class="home" aria-label={site.brand} data-menu-link><Logo /></a
       >
       <button
         class="close-btn"

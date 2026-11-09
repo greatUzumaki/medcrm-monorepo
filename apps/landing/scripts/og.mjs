@@ -18,7 +18,7 @@ await page.goto(pathToFileURL(fileURLToPath(new URL('./og/og.html', import.meta.
 await page.evaluate(() => document.fonts.ready);
 
 for (const [lang, d] of Object.entries(dicts)) {
-  await page.evaluate((data) => window.render(data), { lang, brand: 'MedCRM', title: d.hero.title, tagline: d.footer.tagline });
+  await page.evaluate((data) => window.render(data), { lang, brand: 'OpenMedAI', title: d.hero.title, tagline: d.footer.tagline });
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${out}${lang}.png` });
   console.log(`og/${lang}.png`);
