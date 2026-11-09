@@ -2,7 +2,7 @@ import type { Dict } from './index';
 
 export const en: Dict = {
   meta: {
-    title: 'MedCRM — clinic CRM with an AI assistant for doctors',
+    title: 'OpenMedAI — clinic CRM with an AI assistant for doctors',
     description:
       'Scheduling, electronic medical records, payments and patient communication in one system. AI drafts the visit note while the doctor talks to the patient.',
   },
@@ -22,7 +22,7 @@ export const en: Dict = {
   },
   hero: {
     title: ['Your whole clinic in one system.', 'AI handles the routine.'],
-    lead: 'MedCRM runs scheduling, medical records, payments and patient messaging. While the doctor talks to the patient, AI writes the draft visit note.',
+    lead: 'OpenMedAI runs scheduling, medical records, payments and patient messaging. While the doctor talks to the patient, AI writes the draft visit note.',
     cta: 'Book a demo',
     secondary: 'See how it works',
     facts: ['Data stays in-country', 'Built for medical data law', 'Runs in the browser and on tablets'],
@@ -53,7 +53,7 @@ export const en: Dict = {
     },
   },
   features: {
-    title: 'What MedCRM does',
+    title: 'What OpenMedAI does',
     items: [
       { title: 'Scheduling and online booking', text: 'Doctor and room calendars, booking from your website and messengers, waitlists.' },
       { title: 'Electronic medical records', text: 'Exam templates, visit history, documents and printing in approved formats.' },
@@ -112,16 +112,16 @@ export const en: Dict = {
   faq: {
     title: 'Frequently asked questions',
     items: [
-      { q: 'How much does MedCRM cost?', a: 'Pricing depends on the number of doctors and modules. We’ll give you an exact quote during the demo.' },
+      { q: 'How much does OpenMedAI cost?', a: 'Pricing depends on the number of doctors and modules. We’ll give you an exact quote during the demo.' },
       { q: 'Can we migrate data from our current system?', a: 'Yes. We migrate patients, schedules, visit history and price lists from spreadsheets or an export from another system. We’ll estimate the scope during the demo.' },
       { q: 'Where is patient data stored?', a: 'In data centers in the country of service. Clinic data is not transferred abroad.' },
       { q: 'Does the AI send patient data to third parties?', a: 'No. The AI runs on in-country models, and personal data is replaced with anonymous tokens before processing.' },
-      { q: 'Do we need to install anything?', a: 'No. MedCRM runs in the browser on computers and tablets.' },
+      { q: 'Do we need to install anything?', a: 'No. OpenMedAI runs in the browser on computers and tablets.' },
     ],
   },
   contact: {
     title: 'Book a demo',
-    lead: 'We’ll walk through MedCRM using your clinic’s scenarios and answer your questions. The demo takes about 40 minutes.',
+    lead: 'We’ll walk through OpenMedAI using your clinic’s scenarios and answer your questions. The demo takes about 40 minutes.',
     name: 'Name',
     clinic: 'Clinic',
     phone: 'Phone',
@@ -129,9 +129,12 @@ export const en: Dict = {
     doctors: 'Number of doctors',
     doctorsOptions: ['up to 5', '6–20', '21–50', 'more than 50'],
     message: 'Comment',
+    messageHint: 'Do not include any patient data',
     optional: 'optional',
-    consentBefore: 'I consent to the processing of my personal data in accordance with the ',
-    consentLink: 'privacy policy',
+    consentBefore: 'I give my ',
+    consentLink: 'consent to the processing of personal data',
+    consentMiddle: ' and confirm that I have read the ',
+    policyLink: 'privacy policy',
     consentAfter: '.',
     submit: 'Send request',
     sending: 'Sending…',
@@ -150,11 +153,15 @@ export const en: Dict = {
     hours: 'Mon–Fri, 9:00–19:00 (Moscow time)',
     address: 'Moscow',
     privacy: 'Privacy policy',
+    consent: 'Consent to personal data processing',
+    operator: 'Personal data operator',
     rights: 'All rights reserved.',
   },
-  privacy: {
-    title: 'Privacy policy',
+  legal: {
+    privacy: 'Privacy policy',
+    consent: 'Consent to personal data processing',
+    version: 'Version of',
+    ruOnly: 'The document is governed by Russian law (152-FZ). The Russian text below is the legally binding version.',
     back: 'Back to home',
-    draft: 'This document is being prepared for publication. Until then, send questions about personal data processing to',
   },
 };

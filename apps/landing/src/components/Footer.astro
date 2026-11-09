@@ -2,6 +2,7 @@
 import Logo from './Logo.astro';
 import { localePath, type Locale, t } from '../i18n';
 import { site } from '../site';
+import { operator } from '../legal';
 
 interface Props {
   lang: Locale;
@@ -43,7 +44,9 @@ const year = new Date().getFullYear();
 
     <div class="bottom">
       <span>© {year} {site.brand}. {d.footer.rights}</span>
+      <span>{d.footer.operator}: {operator.name}, ИНН {operator.inn}, ОГРН {operator.ogrn}</span>
       <a href={localePath(lang, 'privacy/')}>{d.footer.privacy}</a>
+      <a href={localePath(lang, 'consent/')}>{d.footer.consent}</a>
     </div>
   </div>
 </footer>

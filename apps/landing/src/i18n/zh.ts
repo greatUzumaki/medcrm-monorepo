@@ -2,7 +2,7 @@ import type { Dict } from './index';
 
 export const zh: Dict = {
   meta: {
-    title: 'MedCRM — 内置医生 AI 助手的诊所 CRM',
+    title: 'OpenMedAI — 内置医生 AI 助手的诊所 CRM',
     description: '预约、电子病历、收费和患者沟通集于一个系统。医生与患者交谈时，AI 自动起草就诊记录。',
   },
   skip: '跳到主要内容',
@@ -21,7 +21,7 @@ export const zh: Dict = {
   },
   hero: {
     title: ['整个诊所，一个系统。', '琐事交给 AI。'],
-    lead: 'MedCRM 管理预约、病历、收费和患者消息。医生与患者交谈时，AI 同步撰写就诊记录草稿。',
+    lead: 'OpenMedAI 管理预约、病历、收费和患者消息。医生与患者交谈时，AI 同步撰写就诊记录草稿。',
     cta: '预约演示',
     secondary: '了解工作方式',
     facts: ['数据存储在本国境内', '符合医疗数据法规', '浏览器和平板即可使用'],
@@ -52,7 +52,7 @@ export const zh: Dict = {
     },
   },
   features: {
-    title: 'MedCRM 能做什么',
+    title: 'OpenMedAI 能做什么',
     items: [
       { title: '排班与在线预约', text: '医生和诊室排班表，支持网站和即时通讯预约，候补名单。' },
       { title: '电子病历', text: '检查模板、就诊历史、文档以及按规定格式打印。' },
@@ -107,16 +107,16 @@ export const zh: Dict = {
   faq: {
     title: '常见问题',
     items: [
-      { q: 'MedCRM 多少钱？', a: '价格取决于医生人数和所选模块。我们会在演示时给出准确报价。' },
+      { q: 'OpenMedAI 多少钱？', a: '价格取决于医生人数和所选模块。我们会在演示时给出准确报价。' },
       { q: '能从现有系统迁移数据吗？', a: '可以。我们可从表格或其他系统导出的文件迁移患者、排班、就诊历史和价目表，具体工作量在演示时评估。' },
       { q: '患者数据存储在哪里？', a: '存储在服务所在国境内的数据中心，诊所数据不会传输到境外。' },
       { q: 'AI 会把患者数据发送给第三方吗？', a: '不会。AI 运行在境内部署的模型上，处理前个人信息会被替换为匿名标记。' },
-      { q: '需要安装软件吗？', a: '不需要。MedCRM 在电脑和平板的浏览器中即可使用。' },
+      { q: '需要安装软件吗？', a: '不需要。OpenMedAI 在电脑和平板的浏览器中即可使用。' },
     ],
   },
   contact: {
     title: '预约演示',
-    lead: '我们将结合您诊所的业务场景演示 MedCRM 并解答问题。演示约 40 分钟。',
+    lead: '我们将结合您诊所的业务场景演示 OpenMedAI 并解答问题。演示约 40 分钟。',
     name: '姓名',
     clinic: '诊所名称',
     phone: '电话',
@@ -124,10 +124,13 @@ export const zh: Dict = {
     doctors: '诊所医生人数',
     doctorsOptions: ['5 人以下', '6–20 人', '21–50 人', '50 人以上'],
     message: '备注',
+    messageHint: '请勿填写任何患者信息',
     optional: '选填',
-    consentBefore: '我同意根据',
-    consentLink: '个人信息处理政策',
-    consentAfter: '处理我的个人信息。',
+    consentBefore: '我同意',
+    consentLink: '处理我的个人信息',
+    consentMiddle: '，并确认已阅读',
+    policyLink: '个人信息处理政策',
+    consentAfter: '。',
     submit: '提交申请',
     sending: '正在提交…',
     success: '申请已提交。我们会与您联系，商定演示时间。',
@@ -145,11 +148,15 @@ export const zh: Dict = {
     hours: '周一至周五 9:00–19:00（莫斯科时间）',
     address: '莫斯科',
     privacy: '个人信息处理政策',
+    consent: '个人信息处理同意书',
+    operator: '个人信息运营者',
     rights: '保留所有权利。',
   },
-  privacy: {
-    title: '个人信息处理政策',
+  legal: {
+    privacy: '个人信息处理政策',
+    consent: '个人信息处理同意书',
+    version: '版本日期',
+    ruOnly: '本文件受俄罗斯联邦法律（第152-FZ号联邦法）管辖。以下俄文文本为具有法律效力的版本。',
     back: '返回首页',
-    draft: '本文件正在准备发布。在此之前，有关个人信息处理的问题请发送至',
   },
 };

@@ -2,7 +2,7 @@ import type { Dict } from './index';
 
 export const es: Dict = {
   meta: {
-    title: 'MedCRM — CRM para clínicas con asistente de IA para médicos',
+    title: 'OpenMedAI — CRM para clínicas con asistente de IA para médicos',
     description:
       'Agenda, historia clínica electrónica, cobros y comunicación con pacientes en un solo sistema. La IA redacta la nota de consulta mientras el médico habla con el paciente.',
   },
@@ -22,7 +22,7 @@ export const es: Dict = {
   },
   hero: {
     title: ['Toda la clínica en un solo sistema.', 'La IA se ocupa de la rutina.'],
-    lead: 'MedCRM gestiona agenda, historias clínicas, cobros y mensajes a pacientes. Mientras el médico habla con el paciente, la IA redacta el borrador de la nota.',
+    lead: 'OpenMedAI gestiona agenda, historias clínicas, cobros y mensajes a pacientes. Mientras el médico habla con el paciente, la IA redacta el borrador de la nota.',
     cta: 'Solicitar demo',
     secondary: 'Cómo funciona',
     facts: ['Datos alojados en el país', 'Pensado para la normativa de datos médicos', 'Funciona en el navegador y en tablet'],
@@ -53,7 +53,7 @@ export const es: Dict = {
     },
   },
   features: {
-    title: 'Qué hace MedCRM',
+    title: 'Qué hace OpenMedAI',
     items: [
       { title: 'Agenda y citas online', text: 'Agendas de médicos y consultorios, citas desde la web y mensajería, listas de espera.' },
       { title: 'Historia clínica electrónica', text: 'Plantillas de exploración, historial de visitas, documentos e impresión en formatos oficiales.' },
@@ -112,16 +112,16 @@ export const es: Dict = {
   faq: {
     title: 'Preguntas frecuentes',
     items: [
-      { q: '¿Cuánto cuesta MedCRM?', a: 'Depende del número de médicos y de los módulos. Le daremos un precio exacto en la demo.' },
+      { q: '¿Cuánto cuesta OpenMedAI?', a: 'Depende del número de médicos y de los módulos. Le daremos un precio exacto en la demo.' },
       { q: '¿Podemos migrar los datos de nuestro sistema actual?', a: 'Sí. Migramos pacientes, agendas, historial de visitas y tarifas desde hojas de cálculo o desde una exportación de otro sistema. Estimaremos el alcance en la demo.' },
       { q: '¿Dónde se guardan los datos de los pacientes?', a: 'En centros de datos del país de servicio. Los datos de la clínica no se transfieren al extranjero.' },
       { q: '¿La IA envía datos de pacientes a terceros?', a: 'No. La IA funciona con modelos alojados en el país y los datos personales se sustituyen por marcas anónimas antes de procesarlos.' },
-      { q: '¿Hay que instalar algo?', a: 'No. MedCRM funciona en el navegador, en ordenador y tablet.' },
+      { q: '¿Hay que instalar algo?', a: 'No. OpenMedAI funciona en el navegador, en ordenador y tablet.' },
     ],
   },
   contact: {
     title: 'Solicite una demo',
-    lead: 'Le mostraremos MedCRM con los casos de su clínica y responderemos a sus preguntas. La demo dura unos 40 minutos.',
+    lead: 'Le mostraremos OpenMedAI con los casos de su clínica y responderemos a sus preguntas. La demo dura unos 40 minutos.',
     name: 'Nombre',
     clinic: 'Clínica',
     phone: 'Teléfono',
@@ -129,9 +129,12 @@ export const es: Dict = {
     doctors: 'Número de médicos',
     doctorsOptions: ['hasta 5', '6–20', '21–50', 'más de 50'],
     message: 'Comentario',
+    messageHint: 'No incluya datos de pacientes',
     optional: 'opcional',
-    consentBefore: 'Acepto el tratamiento de mis datos personales conforme a la ',
-    consentLink: 'política de privacidad',
+    consentBefore: 'Doy mi ',
+    consentLink: 'consentimiento para el tratamiento de datos personales',
+    consentMiddle: ' y confirmo haber leído la ',
+    policyLink: 'política de privacidad',
     consentAfter: '.',
     submit: 'Enviar solicitud',
     sending: 'Enviando…',
@@ -150,11 +153,15 @@ export const es: Dict = {
     hours: 'Lun–vie, 9:00–19:00 (hora de Moscú)',
     address: 'Moscú',
     privacy: 'Política de privacidad',
+    consent: 'Consentimiento para el tratamiento de datos',
+    operator: 'Responsable del tratamiento de datos',
     rights: 'Todos los derechos reservados.',
   },
-  privacy: {
-    title: 'Política de privacidad',
+  legal: {
+    privacy: 'Política de privacidad',
+    consent: 'Consentimiento para el tratamiento de datos personales',
+    version: 'Versión del',
+    ruOnly: 'El documento se rige por la legislación rusa (Ley Federal 152-FZ). El texto en ruso a continuación es la versión jurídicamente vinculante.',
     back: 'Volver al inicio',
-    draft: 'Este documento se está preparando para su publicación. Hasta entonces, envíe sus consultas sobre el tratamiento de datos personales a',
   },
 };

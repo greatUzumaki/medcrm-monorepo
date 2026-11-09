@@ -1,6 +1,7 @@
 ---
 import { localePath, type Dict, type Locale } from '../../i18n';
 import { site } from '../../site';
+import { versions } from '../../legal';
 
 interface Props {
   d: Dict;
@@ -43,6 +44,8 @@ const msgs = {
       data-dev={import.meta.env.DEV ? '1' : ''}
       data-lang={lang}
       data-msgs={JSON.stringify(msgs)}
+      data-consent-version={versions.consent}
+      data-policy-version={versions.privacy}
     >
       <div class="row">
         <label class="field">
@@ -76,7 +79,8 @@ const msgs = {
       </label>
       <label class="field">
         <span>{c.message} <small>({c.optional})</small></span>
-        <textarea id="lead-message" name="message" rows="3" maxlength="2000"></textarea>
+        <textarea id="lead-message" name="message" rows="3" maxlength="2000" aria-describedby="lead-message-hint"></textarea>
+        <em id="lead-message-hint" class="hint">{c.messageHint}</em>
       </label>
 
       <!-- Honeypot: hidden from people, bots fill it. -->
@@ -87,7 +91,10 @@ const msgs = {
       <label class="consent">
         <input id="lead-consent" type="checkbox" name="consent" required aria-describedby="lead-consent-err" />
         <span>
-          {c.consentBefore}<a href={localePath(lang, 'privacy/')} target="_blank">{c.consentLink}</a>{c.consentAfter}
+          {c.consentBefore}<a href={localePath(lang, 'consent/')} target="_blank">{c.consentLink}</a>{c.consentMiddle}<a
+            href={localePath(lang, 'privacy/')}
+            target="_blank">{c.policyLink}</a
+          >{c.consentAfter}
         </span>
       </label>
       <em id="lead-consent-err" class="err consent-err" aria-live="polite"></em>
@@ -168,6 +175,8 @@ const msgs = {
           doctors: String(data.get('doctors') ?? ''),
           message: String(data.get('message') ?? '').trim() || undefined,
           consent: true,
+          consentVersion: form.dataset['consentVersion'],
+          policyVersion: form.dataset['policyVersion'],
           locale: form.dataset['lang'],
           source: 'landing',
         };
@@ -320,6 +329,12 @@ const msgs = {
     font-size: 0.8125rem;
     font-style: normal;
     line-height: 1.25rem;
+  }
+
+  .hint {
+    color: var(--ink-2);
+    font-size: 0.8125rem;
+    font-style: normal;
   }
 
   .hp {
