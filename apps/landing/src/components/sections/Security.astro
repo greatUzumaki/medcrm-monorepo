@@ -42,7 +42,10 @@ const icons = [
   .security {
     position: relative;
     margin-inline: clamp(0.5rem, 1.5vw, 1.25rem);
-    border-radius: clamp(1.5rem, 4vw, 3rem);
+    --r: clamp(1.5rem, 4vw, 3rem);
+    border-radius: var(--r);
+    /* overflow+radius alone doesn't clip composited children in Safari; clip-path does. */
+    clip-path: inset(0 round var(--r));
     background: var(--deep);
     color: #fff;
     overflow: hidden;
@@ -60,7 +63,6 @@ const icons = [
     top: -30rem;
     border-radius: 50%;
     background: radial-gradient(closest-side, color-mix(in oklab, var(--iris-2) 45%, transparent), transparent 70%);
-    filter: blur(20px);
   }
 
   .head {

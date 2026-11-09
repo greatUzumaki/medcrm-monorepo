@@ -151,13 +151,9 @@ const { d } = Astro.props;
     .art {
       inset: 0 -10vw auto -10vw;
       height: min(95vw, 34rem);
-    }
-    .art::after {
-      content: '';
-      position: absolute;
-      inset: auto 0 0;
-      height: 40%;
-      background: linear-gradient(transparent, var(--paper));
+      /* Mask, not a paper-coloured overlay: Safari paints the blurred glow/canvas layers past an overlay
+         and their bottom edge shows as a seam. A mask fades and clips every layer inside .art. */
+      mask-image: linear-gradient(#000 60%, transparent);
     }
     .ctas {
       justify-self: stretch;
