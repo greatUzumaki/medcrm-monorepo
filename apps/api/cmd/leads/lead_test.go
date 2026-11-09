@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -50,5 +51,21 @@ func TestLimiter(t *testing.T) {
 	}
 	if !lim.allow("2.2.2.2") {
 		t.Fatal("other IP must not be limited")
+	}
+
+	// IPv6 addresses in one /64 share a bucket.
+	if !lim.allow("2001:db8::1") || !lim.allow("2001:db8::2") || lim.allow("2001:db8::ffff") {
+		t.Fatal("same /64 must share the limit")
+	}
+
+	// Global cap holds across distinct clients.
+	g := newLimiter(1000)
+	for i := range globalPerHour {
+		if !g.allow(fmt.Sprintf("10.0.%d.%d", i/250, i%250)) {
+			t.Fatalf("request %d under global cap rejected", i)
+		}
+	}
+	if g.allow("10.9.9.9") {
+		t.Fatal("global cap must reject")
 	}
 }

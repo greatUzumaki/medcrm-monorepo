@@ -285,26 +285,57 @@ func clientIP(r *http.Request) string {
 	return host
 }
 
+const (
+	maxTrackedKeys = 10_000 // bounds memory and the pruning loop
+	globalPerHour  = 60     // caps outbound mail under a distributed flood
+)
+
 type limiter struct {
 	mu     sync.Mutex
 	max    int
 	window time.Duration
 	hits   map[string][]time.Time
+	global []time.Time
 }
 
 func newLimiter(max int) *limiter {
 	return &limiter{max: max, window: 10 * time.Minute, hits: map[string][]time.Time{}}
 }
 
-// allow is a sliding window per IP; old entries are pruned on every call so the map stays small.
+// limitKey groups IPv6 clients by /64: one host usually controls the whole prefix.
+func limitKey(ip string) string {
+	parsed := net.ParseIP(ip)
+	if parsed == nil || parsed.To4() != nil {
+		return ip
+	}
+	return parsed.Mask(net.CIDRMask(64, 128)).String() + "/64"
+}
+
+// allow is a sliding window per client key plus a global hourly cap.
 func (l *limiter) allow(ip string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	now := time.Now()
+	ip = limitKey(ip)
+
+	g := l.global[:0]
+	for _, t := range l.global {
+		if now.Sub(t) <= time.Hour {
+			g = append(g, t)
+		}
+	}
+	l.global = g
+	if len(l.global) >= globalPerHour {
+		return false
+	}
+
 	for k, ts := range l.hits {
 		if len(ts) == 0 || now.Sub(ts[len(ts)-1]) > l.window {
 			delete(l.hits, k)
 		}
+	}
+	if _, seen := l.hits[ip]; !seen && len(l.hits) >= maxTrackedKeys {
+		return false // table full of active clients: shed new ones rather than grow without bound
 	}
 	recent := l.hits[ip][:0]
 	for _, t := range l.hits[ip] {
@@ -317,6 +348,7 @@ func (l *limiter) allow(ip string) bool {
 		return false
 	}
 	l.hits[ip] = append(recent, now)
+	l.global = append(l.global, now)
 	return true
 }
 
