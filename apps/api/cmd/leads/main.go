@@ -172,8 +172,9 @@ func (s *server) handleLead(w http.ResponseWriter, r *http.Request) {
 }
 
 const (
-	rotateBytes  = 50 << 20 // start a new file past this size so no single file grows unbounded
-	minFreeBytes = 1 << 30  // refuse only when the disk itself is nearly full
+	rotateBytes  = 50 << 20  // start a new file past this size so no single file grows unbounded
+	totalBytes   = 500 << 20 // all lead files together (~800k leads): reaching it needs a botnet, not a person
+	minFreeBytes = 1 << 30   // secondary guard: never eat the last GB other services need
 )
 
 var errStoreFull = errors.New("disk almost full")
@@ -193,6 +194,18 @@ func (s *server) store(rec record) error {
 			return fmt.Errorf("rotate: %w", err)
 		}
 		s.log.Warn("lead store rotated: unusual volume, check for a flood", "archive", filepath.Base(archived))
+	}
+	if files, _ := filepath.Glob(filepath.Join(s.cfg.dataDir, "leads*.jsonl")); len(files) > 0 {
+		var sum int64
+		for _, f := range files {
+			if st, err := os.Stat(f); err == nil {
+				sum += st.Size()
+			}
+		}
+		if sum >= totalBytes {
+			s.log.Error("lead storage budget exhausted: refusing new leads, inspect and archive the files", "bytes", sum)
+			return errStoreFull
+		}
 	}
 	var fs syscall.Statfs_t
 	if err := syscall.Statfs(s.cfg.dataDir, &fs); err == nil && uint64(fs.Bavail)*uint64(fs.Bsize) < minFreeBytes {
