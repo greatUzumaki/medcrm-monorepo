@@ -171,10 +171,12 @@ func (s *server) handleLead(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"id": rec.ID})
 }
 
-// maxStoreBytes caps disk use under a flood (~80k leads at ~600 B each).
-const maxStoreBytes = 50 << 20
+const (
+	rotateBytes  = 50 << 20 // start a new file past this size so no single file grows unbounded
+	minFreeBytes = 1 << 30  // refuse only when the disk itself is nearly full
+)
 
-var errStoreFull = errors.New("lead store is full")
+var errStoreFull = errors.New("disk almost full")
 
 // store appends the record as one JSON line. shortcut: a flat file, move to Postgres when apps/api lands.
 func (s *server) store(rec record) error {
@@ -185,7 +187,16 @@ func (s *server) store(rec record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	path := filepath.Join(s.cfg.dataDir, "leads.jsonl")
-	if st, err := os.Stat(path); err == nil && st.Size() >= maxStoreBytes {
+	if st, err := os.Stat(path); err == nil && st.Size() >= rotateBytes {
+		archived := filepath.Join(s.cfg.dataDir, "leads-"+time.Now().UTC().Format("20060102-150405")+".jsonl")
+		if err := os.Rename(path, archived); err != nil {
+			return fmt.Errorf("rotate: %w", err)
+		}
+		s.log.Warn("lead store rotated: unusual volume, check for a flood", "archive", filepath.Base(archived))
+	}
+	var fs syscall.Statfs_t
+	if err := syscall.Statfs(s.cfg.dataDir, &fs); err == nil && uint64(fs.Bavail)*uint64(fs.Bsize) < minFreeBytes {
+		s.log.Error("disk almost full: refusing new leads")
 		return errStoreFull
 	}
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
