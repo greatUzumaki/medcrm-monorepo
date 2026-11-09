@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -72,7 +73,8 @@ type server struct {
 	log     *slog.Logger
 	limiter *limiter
 	mail    *budget
-	mu      sync.Mutex // serialises appends to the leads file
+	held    atomic.Int64 // leads stored without delivery while over budget
+	mu      sync.Mutex   // serialises appends to the leads file
 	wg      sync.WaitGroup
 	http    *http.Client
 }
@@ -148,7 +150,11 @@ func (s *server) handleLead(w http.ResponseWriter, r *http.Request) {
 	rec := record{ID: newID(), ReceivedAt: time.Now().UTC(), IP: ip, Lead: lead}
 	if err := s.store(rec); err != nil {
 		s.log.Error("store lead", "id", rec.ID, "err", err)
-		problem(w, http.StatusInternalServerError, "could not save the request")
+		status := http.StatusInternalServerError
+		if errors.Is(err, errStoreFull) {
+			status = http.StatusServiceUnavailable
+		}
+		problem(w, status, "could not save the request")
 		return
 	}
 	s.log.Info("lead stored", "id", rec.ID, "locale", lead.Locale) // no personal data in logs
@@ -165,6 +171,11 @@ func (s *server) handleLead(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"id": rec.ID})
 }
 
+// maxStoreBytes caps disk use under a flood (~80k leads at ~600 B each).
+const maxStoreBytes = 50 << 20
+
+var errStoreFull = errors.New("lead store is full")
+
 // store appends the record as one JSON line. shortcut: a flat file, move to Postgres when apps/api lands.
 func (s *server) store(rec record) error {
 	line, err := json.Marshal(rec)
@@ -173,7 +184,11 @@ func (s *server) store(rec record) error {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	f, err := os.OpenFile(filepath.Join(s.cfg.dataDir, "leads.jsonl"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	path := filepath.Join(s.cfg.dataDir, "leads.jsonl")
+	if st, err := os.Stat(path); err == nil && st.Size() >= maxStoreBytes {
+		return errStoreFull
+	}
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 	if err != nil {
 		return err
 	}
@@ -189,25 +204,40 @@ func (s *server) store(rec record) error {
 }
 
 func (s *server) deliver(rec record) {
+	mailOn := s.cfg.smtpUser != "" && s.cfg.mailTo != ""
+	tgOn := s.cfg.tgToken != "" && s.cfg.tgChat != ""
+	if !mailOn && !tgOn {
+		return
+	}
 	if !s.mail.take() {
+		s.held.Add(1)
 		s.log.Warn("delivery budget exhausted, lead kept on disk only", "id", rec.ID)
 		return
 	}
-	if s.cfg.smtpUser != "" && s.cfg.mailTo != "" {
-		if err := s.sendMail(rec); err != nil {
+	// Report leads that were held back while over budget, so nothing is silently lost.
+	held := s.held.Swap(0)
+	if mailOn {
+		if err := s.sendMail(rec, held); err != nil {
 			s.log.Error("send mail", "id", rec.ID, "err", err)
 		}
 	}
-	if s.cfg.tgToken != "" && s.cfg.tgChat != "" {
-		if err := s.notifyTelegram(rec); err != nil {
+	if tgOn {
+		if err := s.notifyTelegram(rec, held); err != nil {
 			s.log.Error("telegram", "id", rec.ID, "err", err)
 		}
 	}
 }
 
-func (s *server) sendMail(rec record) error {
+func heldNote(held int64) string {
+	if held == 0 {
+		return ""
+	}
+	return fmt.Sprintf("\n\nВнимание: ещё %d заявок пришли сверх лимита уведомлений и сохранены только на сервере (/var/lib/leads/leads.jsonl).", held)
+}
+
+func (s *server) sendMail(rec record, held int64) error {
 	l := rec.Lead
-	body := fmt.Sprintf("Заявка %s\nПолучена: %s UTC\n\nИмя: %s\nКлиника: %s\nТелефон: %s\nEmail: %s\nВрачей: %s\nЯзык: %s\n\nКомментарий:\n%s\n\nСогласие на обработку ПДн: да (редакция %s, политика %s), IP %s\n",
+	body := heldNote(held) + "\n\n" + fmt.Sprintf("Заявка %s\nПолучена: %s UTC\n\nИмя: %s\nКлиника: %s\nТелефон: %s\nEmail: %s\nВрачей: %s\nЯзык: %s\n\nКомментарий:\n%s\n\nСогласие на обработку ПДн: да (редакция %s, политика %s), IP %s\n",
 		rec.ID, rec.ReceivedAt.Format("2006-01-02 15:04"), l.Name, l.Clinic, l.Phone, dash(l.Email), dash(l.Doctors), l.Locale, dash(l.Message), l.ConsentVersion, l.PolicyVersion, rec.IP)
 
 	headers := []string{
@@ -260,8 +290,8 @@ func (s *server) sendMail(rec record) error {
 }
 
 // notifyTelegram sends a ping without personal data: Telegram stores messages outside Russia.
-func (s *server) notifyTelegram(rec record) error {
-	text := fmt.Sprintf("Новая заявка на демо %s\nВрачей: %s · язык: %s\nКонтакты — в почте %s", rec.ID, dash(rec.Lead.Doctors), rec.Lead.Locale, s.cfg.mailTo)
+func (s *server) notifyTelegram(rec record, held int64) error {
+	text := fmt.Sprintf("Новая заявка на демо %s\nВрачей: %s · язык: %s\nКонтакты — в почте %s", rec.ID, dash(rec.Lead.Doctors), rec.Lead.Locale, s.cfg.mailTo) + heldNote(held)
 	form := url.Values{"chat_id": {s.cfg.tgChat}, "text": {text}}
 	res, err := s.http.PostForm("https://api.telegram.org/bot"+s.cfg.tgToken+"/sendMessage", form)
 	if err != nil {
