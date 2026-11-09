@@ -52,6 +52,8 @@ apps/landing/src/
 - Ошибки формы: строка под ошибку зарезервирована всегда (`.err` с `min-height`), поля `align-content: start` — появление ошибок не должно двигать вёрстку (проверяет `test:browsers`).
 - Элементы поверх canvas перехватывают курсор — интерактив спирали слушает `document`, а не контейнер.
 
+- **Шрифт без прыжков:** Onest объявлен в `Base.astro` с `font-display: optional` + preload (не через CSS fontsource — там `swap`), плюс метрический `Onest Fallback` в `global.css`. Не возвращать `@import '@fontsource-variable/onest'`. Не использовать `ch` в размерах, которые влияют на перенос (`max-width` заголовков): `ch` считается по текущему, ещё запасному шрифту — пиши в `em` (1ch Onest = 0.665em).
+
 ## Проверка
 1. `pnpm -F @medcrm/landing typecheck && pnpm -F @medcrm/landing build`
 2. Нет кириллицы в en/zh/es: grep по `dist/{en,zh,es}` (кроме «Русский» в переключателе)

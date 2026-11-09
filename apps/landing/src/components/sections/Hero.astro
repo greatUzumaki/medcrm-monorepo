@@ -60,7 +60,7 @@ const { d } = Astro.props;
 
   h1 {
     font-size: var(--step-4);
-    max-width: 13ch;
+    max-width: 8.65em; /* = 13ch in Onest; em, not ch: ch follows the fallback font while Onest loads */
   }
 
   :lang(zh) h1 {

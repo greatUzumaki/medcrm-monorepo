@@ -1,4 +1,25 @@
-@import '@fontsource-variable/onest';
+/* Onest @font-face lives in Base.astro (font-display: optional + preload).
+   Metric-matched fallback: if Onest isn't ready in time, text renders in Arial resized to Onest's
+   width and line box, so the page looks and wraps (almost) the same. Measured with canvas on ru+en copy:
+   Onest ascent 0.97em, descent 0.30em; width vs Arial 103.8% ru / 105.4% en (400), 99.1% / 99.4% (600). */
+@font-face {
+  font-family: 'Onest Fallback';
+  src: local('Arial'), local('ArialMT'), local('Roboto');
+  font-weight: 100 500;
+  size-adjust: 104.2%;
+  ascent-override: 93.1%;
+  descent-override: 28.8%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Onest Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Roboto Bold'), local('Roboto-Bold');
+  font-weight: 600 900;
+  size-adjust: 99.1%;
+  ascent-override: 97.9%;
+  descent-override: 30.3%;
+  line-gap-override: 0%;
+}
 
 /* shortcut: tokens live here until packages/ui exists, then move them there and import. */
 /* Theme: every colour is declared once as light-dark(light, dark). `color-scheme` picks the side:
@@ -33,7 +54,7 @@
   --deep: light-dark(#12162b, #111527); /* always-dark band (security section) */
   --shadow: light-dark(rgb(40 44 90 / 0.35), rgb(0 0 0 / 0.6));
 
-  --font: 'Onest Variable', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font: 'Onest Variable', 'Onest Fallback', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
   --step--1: 0.875rem;
   --step-0: 1.0625rem;
   --step-1: 1.25rem;
