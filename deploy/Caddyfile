@@ -37,9 +37,7 @@ openmedai.ru {
 		}
 		# No query strings / IPs beyond what Caddy needs: the static site collects no PD in URLs.
 		format filter {
-			request>uri query {
-				delete
-			}
+			request>uri regexp "\?.*$" ""
 		}
 	}
 }

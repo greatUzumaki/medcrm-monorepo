@@ -30,17 +30,22 @@ KbdInteractiveAuthentication no
 PermitRootLogin prohibit-password
 MaxAuthTries 3
 CONF
-sshd -t && systemctl reload ssh || systemctl reload sshd
+# cloud-init drops a PasswordAuthentication=yes override; remove it so nothing contradicts the hardening.
+grep -l "PasswordAuthentication yes" /etc/ssh/sshd_config.d/*.conf 2>/dev/null | xargs -r rm -f
+# Ubuntu 24.04+ runs ssh via socket activation: reload may find no active service, so don't let it abort.
+sshd -t && systemctl try-reload-or-restart ssh
 
-# Firewall: SSH + HTTP/HTTPS (443/udp for HTTP/3).
+# Firewall: SSH (rate-limited) + HTTP/HTTPS (443/udp for HTTP/3).
 ufw default deny incoming
 ufw default allow outgoing
-ufw allow OpenSSH
+ufw limit OpenSSH
 ufw allow 80/tcp
 ufw allow 443
 ufw --force enable
 
+printf "[sshd]\nenabled = true\nbantime = 1h\nfindtime = 10m\nmaxretry = 5\n" > /etc/fail2ban/jail.d/sshd.local
 systemctl enable --now fail2ban
-dpkg-reconfigure -f noninteractive unattended-upgrades
+systemctl restart fail2ban
+printf 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgrade "1";\n' > /etc/apt/apt.conf.d/20auto-upgrades
 
 echo "OK: server ready. Next: copy deploy/Caddyfile to /etc/caddy/Caddyfile and run apps/landing/scripts/deploy.sh"
