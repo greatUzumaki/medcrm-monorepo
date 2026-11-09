@@ -1,8 +1,8 @@
 // Company data in one place. Placeholder values — replace before launch.
 export const site = {
   brand: 'OpenMedAI',
-  phone: '+7 495 000-00-00',
-  phoneHref: 'tel:+74950000000',
+  phone: '+7 960 288-80-08',
+  phoneHref: 'tel:+79602888008',
   email: 'hello@openmedai.ru',
   telegram: 'https://t.me/openmedai',
   telegramLabel: '@openmedai',
