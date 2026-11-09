@@ -58,14 +58,23 @@ func TestLimiter(t *testing.T) {
 		t.Fatal("same /64 must share the limit")
 	}
 
-	// Global cap holds across distinct clients.
-	g := newLimiter(1000)
-	for i := range globalPerHour {
+	// Intake has no global cap: many distinct clients all pass.
+	g := newLimiter(5)
+	for i := range 200 {
 		if !g.allow(fmt.Sprintf("10.0.%d.%d", i/250, i%250)) {
-			t.Fatalf("request %d under global cap rejected", i)
+			t.Fatalf("client %d rejected: intake must not be globally capped", i)
 		}
 	}
-	if g.allow("10.9.9.9") {
-		t.Fatal("global cap must reject")
+}
+
+func TestBudget(t *testing.T) {
+	b := &budget{max: 3}
+	for range 3 {
+		if !b.take() {
+			t.Fatal("under budget must pass")
+		}
+	}
+	if b.take() {
+		t.Fatal("over budget must be refused")
 	}
 }

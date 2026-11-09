@@ -71,6 +71,7 @@ type server struct {
 	cfg     config
 	log     *slog.Logger
 	limiter *limiter
+	mail    *budget
 	mu      sync.Mutex // serialises appends to the leads file
 	wg      sync.WaitGroup
 	http    *http.Client
@@ -83,7 +84,7 @@ func main() {
 		log.Error("data dir", "err", err)
 		os.Exit(1)
 	}
-	s := &server{cfg: cfg, log: log, limiter: newLimiter(5), http: &http.Client{Timeout: 10 * time.Second}}
+	s := &server{cfg: cfg, log: log, limiter: newLimiter(5), mail: &budget{max: mailPerHour}, http: &http.Client{Timeout: 10 * time.Second}}
 	if cfg.smtpUser == "" || cfg.mailTo == "" {
 		log.Warn("SMTP not configured: leads are only stored on disk")
 	}
@@ -188,6 +189,10 @@ func (s *server) store(rec record) error {
 }
 
 func (s *server) deliver(rec record) {
+	if !s.mail.take() {
+		s.log.Warn("delivery budget exhausted, lead kept on disk only", "id", rec.ID)
+		return
+	}
 	if s.cfg.smtpUser != "" && s.cfg.mailTo != "" {
 		if err := s.sendMail(rec); err != nil {
 			s.log.Error("send mail", "id", rec.ID, "err", err)
@@ -287,15 +292,40 @@ func clientIP(r *http.Request) string {
 
 const (
 	maxTrackedKeys = 10_000 // bounds memory and the pruning loop
-	globalPerHour  = 60     // caps outbound mail under a distributed flood
+	mailPerHour    = 60     // caps outbound mail/notifications under a distributed flood
 )
+
+// budget is a global sliding-window counter. It guards delivery only: intake never
+// depends on it, so a flood cannot make real leads get rejected — they are still stored.
+type budget struct {
+	mu  sync.Mutex
+	max int
+	ts  []time.Time
+}
+
+func (b *budget) take() bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	now := time.Now()
+	kept := b.ts[:0]
+	for _, t := range b.ts {
+		if now.Sub(t) <= time.Hour {
+			kept = append(kept, t)
+		}
+	}
+	b.ts = kept
+	if len(b.ts) >= b.max {
+		return false
+	}
+	b.ts = append(b.ts, now)
+	return true
+}
 
 type limiter struct {
 	mu     sync.Mutex
 	max    int
 	window time.Duration
 	hits   map[string][]time.Time
-	global []time.Time
 }
 
 func newLimiter(max int) *limiter {
@@ -311,23 +341,12 @@ func limitKey(ip string) string {
 	return parsed.Mask(net.CIDRMask(64, 128)).String() + "/64"
 }
 
-// allow is a sliding window per client key plus a global hourly cap.
+// allow is a sliding window per client key (IPv4 address or IPv6 /64).
 func (l *limiter) allow(ip string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	now := time.Now()
 	ip = limitKey(ip)
-
-	g := l.global[:0]
-	for _, t := range l.global {
-		if now.Sub(t) <= time.Hour {
-			g = append(g, t)
-		}
-	}
-	l.global = g
-	if len(l.global) >= globalPerHour {
-		return false
-	}
 
 	for k, ts := range l.hits {
 		if len(ts) == 0 || now.Sub(ts[len(ts)-1]) > l.window {
@@ -348,7 +367,6 @@ func (l *limiter) allow(ip string) bool {
 		return false
 	}
 	l.hits[ip] = append(recent, now)
-	l.global = append(l.global, now)
 	return true
 }
 
