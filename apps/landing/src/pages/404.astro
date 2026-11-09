@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../site';
+---
+
+<Base lang="ru" title={`Страница не найдена — ${site.brand}`} description="Страница не найдена" page="404/" noindex>
+  <Header lang="ru" />
+  <main id="main" class="wrap nf">
+    <h1>Страница не найдена</h1>
+    <p>Возможно, ссылка устарела. Page not found.</p>
+    <a class="btn btn-primary" href="/">На главную</a>
+  </main>
+  <Footer lang="ru" />
+</Base>
+
+<style>
+  .nf {
+    display: grid;
+    gap: 1.5rem;
+    justify-items: start;
+    padding-block: clamp(5rem, 14vw, 10rem);
+  }
+  h1 {
+    font-size: var(--step-4);
+  }
+  p {
+    color: var(--ink-2);
+  }
+</style>

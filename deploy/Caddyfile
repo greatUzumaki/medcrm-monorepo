@@ -1,0 +1,45 @@
+# Landing: static files from /srv/landing. Caddy issues and renews Let's Encrypt certs itself.
+www.openmedai.ru {
+	redir https://openmedai.ru{uri} permanent
+}
+
+openmedai.ru {
+	root * /srv/landing
+	encode zstd gzip
+	file_server
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		# Inline scripts/styles come from Astro (theme/lang bootstrap, inlined CSS); nothing third-party is allowed.
+		# Add the leads API origin to connect-src when PUBLIC_LEADS_ENDPOINT is set.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests"
+		-Server
+	}
+
+	handle_errors 404 {
+		rewrite * /404.html
+		file_server
+	}
+
+	@hashed path /_astro/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	@html path *.html */
+	header @html Cache-Control "no-cache"
+
+	log {
+		output file /var/log/caddy/landing.log {
+			roll_size 50MiB
+			roll_keep 5
+		}
+		# No query strings / IPs beyond what Caddy needs: the static site collects no PD in URLs.
+		format filter {
+			request>uri query {
+				delete
+			}
+		}
+	}
+}

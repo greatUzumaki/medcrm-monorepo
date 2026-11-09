@@ -19,14 +19,29 @@ interface Props {
 const { lang } = Astro.props;
 const d = t(lang);
 const url = new URL(localePath(lang), Astro.site).href;
+const root = new URL('/', Astro.site).href;
+const org = { '@id': `${root}#org` };
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
-    { '@type': 'Organization', name: site.brand, url, email: site.email, telephone: site.phone },
+    {
+      '@type': 'Organization',
+      ...org,
+      name: site.brand,
+      url: root,
+      logo: new URL('/logo-512.png', Astro.site).href,
+      email: site.email,
+      telephone: site.phone,
+      sameAs: [site.telegram],
+    },
+    // WebSite drives the site name shown above the result in Google.
+    { '@type': 'WebSite', '@id': `${root}#website`, name: site.brand, url: root, inLanguage: lang, publisher: org },
     {
       '@type': 'SoftwareApplication',
       name: site.brand,
+      url,
+      publisher: org,
       applicationCategory: 'BusinessApplication',
       applicationSubCategory: 'Medical CRM',
       operatingSystem: 'Web',

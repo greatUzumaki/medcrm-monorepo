@@ -3,6 +3,8 @@ import '../styles/global.css';
 import cyrillic from '@fontsource-variable/onest/files/onest-cyrillic-wght-normal.woff2?url';
 import latin from '@fontsource-variable/onest/files/onest-latin-wght-normal.woff2?url';
 import { htmlLang, localePath, locales, ogLocale, t, type Locale } from '../i18n';
+import { site as siteData } from '../site';
+const brand = siteData.brand;
 
 interface Props {
   lang: Locale;
@@ -11,10 +13,14 @@ interface Props {
   page?: string; // '' for home, 'privacy/' etc.
   detectLanguage?: boolean;
   jsonLd?: object;
+  noindex?: boolean; // legal/404 pages are not search landing pages
 }
 
-const { lang, title, description, page = '', detectLanguage = false, jsonLd } = Astro.props;
-const site = Astro.site ?? new URL('https://medcrm.ru');
+const { lang, title, description, page = '', detectLanguage = false, jsonLd, noindex = false } = Astro.props;
+// Ownership tokens from Yandex Webmaster / Google Search Console (optional, set at build time).
+const yandexVerification = import.meta.env.PUBLIC_YANDEX_VERIFICATION as string | undefined;
+const googleVerification = import.meta.env.PUBLIC_GOOGLE_VERIFICATION as string | undefined;
+const site = Astro.site ?? new URL('https://openmedai.ru');
 const canonical = new URL(localePath(lang, page), site).href;
 const ogImage = new URL(`/og/${lang}.png`, site).href; // rendered by `pnpm og`
 // Only preload the subset the first paint needs; zh text uses system CJK fonts.
@@ -28,9 +34,12 @@ const preload = lang === 'ru' ? [cyrillic, latin] : lang === 'zh' ? [] : [latin]
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
     <link rel="canonical" href={canonical} />
-    {locales.map((l) => <link rel="alternate" hreflang={htmlLang[l]} href={new URL(localePath(l, page), site).href} />)}
-    <link rel="alternate" hreflang="x-default" href={new URL(localePath('ru', page), site).href} />
+    {!noindex && locales.map((l) => <link rel="alternate" hreflang={htmlLang[l]} href={new URL(localePath(l, page), site).href} />)}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={new URL(localePath('ru', page), site).href} />}
+    {yandexVerification && <meta name="yandex-verification" content={yandexVerification} />}
+    {googleVerification && <meta name="google-site-verification" content={googleVerification} />}
     <meta name="theme-color" content="#edeff3" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0b0e1c" media="(prefers-color-scheme: dark)" />
     <script is:inline>
@@ -41,14 +50,18 @@ const preload = lang === 'ru' ? [cyrillic, latin] : lang === 'zh' ? [] : [latin]
       } catch (e) {}
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {preload.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
 
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={brand} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={ogLocale[lang]} />
+    {!noindex && locales.filter((l) => l !== lang).map((l) => <meta property="og:locale:alternate" content={ogLocale[l]} />)}
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={title} />
